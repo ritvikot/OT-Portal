@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Search Portal</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+
+  <!-- 1. LOGIN CARD -->
+  <div id="loginCard" class="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-700">
+    <h2 class="text-2xl font-bold text-center text-blue-400 mb-6">Portal Login</h2>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-medium text-slate-300">User ID</label>
+        <input type="text" id="loginUser" placeholder="Enter User ID" 
+          class="w-full mt-1 p-3 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 text-white">
+      </div>
+      <div>
+        <label class="text-sm font-medium text-slate-300">Password</label>
+        <input type="password" id="loginPass" placeholder="••••••••" 
+          class="w-full mt-1 p-3 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 text-white">
+      </div>
+      <button onclick="handleLogin()" id="loginBtn"
+        class="w-full py-3 bg-blue-600 hover:bg-blue-700 font-semibold rounded-lg transition duration-200 shadow-md">
+        Login
+      </button>
+    </div>
+    <p id="loginMsg" class="mt-4 text-sm text-center text-red-400 hidden"></p>
+  </div>
+
+  <!-- 2. DASHBOARD / SEARCH SECTION -->
+  <div id="portalCard" class="hidden bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-xl border border-slate-700">
+    <div class="flex justify-between items-center pb-4 border-b border-slate-700 mb-6">
+      <div>
+        <h3 class="text-xl font-bold text-white">Search Records</h3>
+        <p class="text-xs text-slate-400">Logged in as: <span id="activeUser" class="text-blue-400 font-medium"></span></p>
+      </div>
+      <button onclick="handleLogout()" class="text-xs bg-red-600/20 text-red-400 hover:bg-red-600/30 px-3 py-1.5 rounded-lg border border-red-500/30">
+        Logout
+      </button>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="flex gap-2">
+      <input type="text" id="searchKey" placeholder="Enter ID to search..." 
+        class="flex-1 p-3 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 text-white">
+      <button onclick="handleSearch()" id="searchBtn"
+        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 font-semibold rounded-lg transition duration-200">
+        Search
+      </button>
+    </div>
+
+    <!-- Results Display -->
+    <div id="resultArea" class="mt-6 hidden">
+      <div id="resultContent" class="bg-slate-900 p-5 rounded-xl border border-slate-700/80 space-y-2">
+        <!-- Results will be injected here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxadUGeS1qfyE_uGcEX7zekYNBbxEGt6K7QxHMLbr3XNOFpxd4GIbZ9sjiERcZIRX6L1Q/exec";
+
+    let sessionUser = "";
+    let sessionPass = "";
+
+    async function handleLogin() {
+      const user = document.getElementById("loginUser").value.trim();
+      const pass = document.getElementById("loginPass").value.trim();
+      const msg = document.getElementById("loginMsg");
+      const btn = document.getElementById("loginBtn");
+
+      if (!user || !pass) {
+        msg.textContent = "Please enter both User ID and Password.";
+        msg.classList.remove("hidden");
+        return;
+      }
+
+      btn.textContent = "Verifying...";
+      btn.disabled = true;
+      msg.classList.add("hidden");
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "login", username: user, password: pass })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          sessionUser = user;
+          sessionPass = pass;
+          document.getElementById("activeUser").textContent = user;
+          document.getElementById("loginCard").classList.add("hidden");
+          document.getElementById("portalCard").classList.remove("hidden");
+        } else {
+          msg.textContent = data.message || "Invalid credentials.";
+          msg.classList.remove("hidden");
+        }
+      } catch (err) {
+        msg.textContent = "Error connecting to server. Please try again.";
+        msg.classList.remove("hidden");
+      } finally {
+        btn.textContent = "Login";
+        btn.disabled = false;
+      }
+    }
+
+    async function handleSearch() {
+      const key = document.getElementById("searchKey").value.trim();
+      const resultArea = document.getElementById("resultArea");
+      const resultContent = document.getElementById("resultContent");
+      const btn = document.getElementById("searchBtn");
+
+      if (!key) {
+        alert("Please enter an ID to search.");
+        return;
+      }
+
+      btn.textContent = "Searching...";
+      btn.disabled = true;
+      resultArea.classList.remove("hidden");
+      resultContent.innerHTML = `<p class="text-slate-400 text-center py-4">Fetching data...</p>`;
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "search",
+            username: sessionUser,
+            password: sessionPass,
+            searchKey: key
+          })
+        });
+        const response = await res.json();
+
+        if (response.success && response.data) {
+          let html = `<div class="grid grid-cols-1 gap-2">`;
+          for (const [col, val] of Object.entries(response.data)) {
+            html += `
+              <div class="flex justify-between py-1.5 border-b border-slate-800 text-sm">
+                <span class="text-slate-400 font-medium">${col}:</span>
+                <span class="text-slate-100 font-semibold">${val}</span>
+              </div>`;
+          }
+          html += `</div>`;
+          resultContent.innerHTML = html;
+        } else {
+          resultContent.innerHTML = `<p class="text-red-400 text-center py-4">No matching records found.</p>`;
+        }
+      } catch (err) {
+        resultContent.innerHTML = `<p class="text-red-400 text-center py-4">Error fetching details.</p>`;
+      } finally {
+        btn.textContent = "Search";
+        btn.disabled = false;
+      }
+    }
+
+    function handleLogout() {
+      sessionUser = "";
+      sessionPass = "";
+      document.getElementById("loginUser").value = "";
+      document.getElementById("loginPass").value = "";
+      document.getElementById("portalCard").classList.add("hidden");
+      document.getElementById("resultArea").classList.add("hidden");
+      document.getElementById("loginCard").classList.remove("hidden");
+    }
+  </script>
+</body>
+</html>

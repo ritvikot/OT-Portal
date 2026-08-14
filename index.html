@@ -46,7 +46,7 @@
 
     <!-- Search Bar -->
     <div class="flex gap-2">
-      <input type="text" id="searchKey" placeholder="Enter ID to search..." 
+      <input type="text" id="searchKey" placeholder="Enter your ID..." 
         class="flex-1 p-3 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 text-white">
       <button onclick="handleSearch()" id="searchBtn"
         class="px-6 py-3 bg-blue-600 hover:bg-blue-700 font-semibold rounded-lg transition duration-200">
@@ -63,7 +63,8 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxadUGeS1qfyE_uGcEX7zekYNBbxEGt6K7QxHMLbr3XNOFpxd4GIbZ9sjiERcZIRX6L1Q/exec";
+    // आपका नया Web App URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHweWv0NmBCATqQ00q3RSjO2nzsQIR6nO4SuC-OFYOnTFxj2iVoWQ2A4QJn8UN9WUBIw/exec";
 
     let sessionUser = "";
     let sessionPass = "";
@@ -95,6 +96,7 @@
           sessionUser = user;
           sessionPass = pass;
           document.getElementById("activeUser").textContent = user;
+          document.getElementById("searchKey").value = user; // लॉगिन यूजर की ID अपने आप सर्च बॉक्स में भर जाएगी
           document.getElementById("loginCard").classList.add("hidden");
           document.getElementById("portalCard").classList.remove("hidden");
         } else {
@@ -142,7 +144,7 @@
           let html = `<div class="grid grid-cols-1 gap-2">`;
           for (const [col, val] of Object.entries(response.data)) {
             html += `
-              <div class="flex justify-between py-1.5 border-b border-slate-800 text-sm">
+              <div class="flex justify-between py-2 border-b border-slate-800 text-sm">
                 <span class="text-slate-400 font-medium">${col}:</span>
                 <span class="text-slate-100 font-semibold">${val}</span>
               </div>`;
@@ -150,7 +152,7 @@
           html += `</div>`;
           resultContent.innerHTML = html;
         } else {
-          resultContent.innerHTML = `<p class="text-red-400 text-center py-4">No matching records found.</p>`;
+          resultContent.innerHTML = `<p class="text-red-400 text-center py-4">${response.error || "No matching records found."}</p>`;
         }
       } catch (err) {
         resultContent.innerHTML = `<p class="text-red-400 text-center py-4">Error fetching details.</p>`;
@@ -165,6 +167,7 @@
       sessionPass = "";
       document.getElementById("loginUser").value = "";
       document.getElementById("loginPass").value = "";
+      document.getElementById("searchKey").value = "";
       document.getElementById("portalCard").classList.add("hidden");
       document.getElementById("resultArea").classList.add("hidden");
       document.getElementById("loginCard").classList.remove("hidden");

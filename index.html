@@ -15,9 +15,9 @@
 
     .input-group { margin-bottom: 16px; }
     label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: #374151; }
-    input { width: 100%; padding: 11px 14px; border: 1.5px solid #d1d5db; border-radius: 8px; font-size: 15px; outline: none; }
+    input { width: 100%; padding: 11px 14px; border: 1.5px solid #d1d5db; border-radius: 8px; font-size: 15px; outline: none; transition: border-color 0.2s; }
     input:focus { border-color: #1a73e8; }
-    button.btn-primary { width: 100%; padding: 12px; background: #1a73e8; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+    button.btn-primary { width: 100%; padding: 12px; background: #1a73e8; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
     button.btn-primary:hover { background: #1557b0; }
 
     .error-box { background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 8px; font-size: 14px; text-align: center; margin-top: 15px; display: none; }
@@ -28,6 +28,7 @@
     .user-info h3 { margin: 0; font-size: 18px; color: #111827; }
     .user-info span { font-size: 13px; color: #6b7280; }
     .logout-btn { background: #f3f4f6; border: 1px solid #d1d5db; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+    .logout-btn:hover { background: #e5e7eb; }
 
     /* Tab Switcher */
     .tabs { display: flex; border-bottom: 2px solid #e5e7eb; margin-bottom: 18px; gap: 8px; }
@@ -95,7 +96,7 @@
       <div id="otTab" class="tab-pane active">
         <div class="stat-card full" style="margin-bottom: 12px;">
           <div class="stat-title">Total OverTime Hours</div>
-          <div id="otTotal" class="stat-value highlight" style="font-size: 22px;">0 Hrs</div>
+          <div id="otTotal" class="stat-value highlight" style="font-size: 22px;">0 Hours</div>
         </div>
         <div class="scroll-table">
           <table class="ot-table">
@@ -156,8 +157,22 @@
 </div>
 
 <script>
-  // Aapka naya Web App URL yaha set hai
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJlAj2E8axbN7WKSD-R7i46gaI3JmfXZhv9YK7MGeg41lUuE61DfLQqT60MfK9a9id/exec";
+  // Aapka naya Web App URL yaha add ho gaya hai
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzTlmQm4cwjMBBojwx1fqYpQGImKL6X57MPxktl1j078EyMxy5WQgv6yfQbfKRs71U/exec";
+
+  function formatDate(raw) {
+    if (!raw) return "";
+    let str = String(raw).trim();
+    // Format ISO dates if present
+    if (str.includes("T") && str.endsWith("Z")) {
+      const d = new Date(str);
+      if (!isNaN(d.getTime())) {
+        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        return `${d.getDate()}-${months[d.getMonth()]}-${d.getFullYear()}`;
+      }
+    }
+    return str;
+  }
 
   async function handleLogin() {
     const userId = document.getElementById("userId").value.trim();
@@ -206,7 +221,7 @@
       if (data.otData.daily && data.otData.daily.length > 0) {
         data.otData.daily.forEach(item => {
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${item.date}</td><td><strong>${item.hours}</strong></td>`;
+          tr.innerHTML = `<td>${formatDate(item.date)}</td><td><strong>${item.hours}</strong></td>`;
           tbody.appendChild(tr);
         });
       } else {

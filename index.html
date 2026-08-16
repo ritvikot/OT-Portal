@@ -3,118 +3,261 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Employee Portal</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Associate Employee Portal</title>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+    body { background: #eef2f6; margin: 0; padding: 20px; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+    .container { width: 100%; max-width: 580px; background: #fff; border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); overflow: hidden; }
+    .header { background: #1a73e8; color: #fff; padding: 20px; text-align: center; }
+    .header h2 { margin: 0; font-size: 20px; }
+    .header p { margin: 5px 0 0; font-size: 13px; opacity: 0.9; }
+    .content { padding: 25px; }
+
+    .input-group { margin-bottom: 16px; }
+    label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: #374151; }
+    input { width: 100%; padding: 11px 14px; border: 1.5px solid #d1d5db; border-radius: 8px; font-size: 15px; outline: none; }
+    input:focus { border-color: #1a73e8; }
+    button.btn-primary { width: 100%; padding: 12px; background: #1a73e8; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+    button.btn-primary:hover { background: #1557b0; }
+
+    .error-box { background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 8px; font-size: 14px; text-align: center; margin-top: 15px; display: none; }
+
+    /* Dashboard Layout */
+    .dashboard { display: none; }
+    .profile-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 15px; }
+    .user-info h3 { margin: 0; font-size: 18px; color: #111827; }
+    .user-info span { font-size: 13px; color: #6b7280; }
+    .logout-btn { background: #f3f4f6; border: 1px solid #d1d5db; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+
+    /* Tab Switcher */
+    .tabs { display: flex; border-bottom: 2px solid #e5e7eb; margin-bottom: 18px; gap: 8px; }
+    .tab-btn { flex: 1; padding: 10px; background: none; border: none; border-bottom: 3px solid transparent; font-size: 14px; font-weight: 600; color: #6b7280; cursor: pointer; }
+    .tab-btn.active { color: #1a73e8; border-color: #1a73e8; }
+
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* Data Cards & Tables */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .stat-card { background: #f9fafb; border: 1px solid #e5e7eb; padding: 10px 12px; border-radius: 8px; }
+    .stat-card.full { grid-column: span 2; }
+    .stat-title { font-size: 11px; color: #6b7280; text-transform: uppercase; font-weight: 600; }
+    .stat-value { font-size: 16px; font-weight: 700; color: #111827; margin-top: 4px; }
+    .highlight { color: #16a34a; }
+    .pending { color: #dc2626; }
+
+    .ot-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+    .ot-table th, .ot-table td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; }
+    .ot-table th { background: #f3f4f6; color: #374151; font-weight: 600; }
+    .scroll-table { max-height: 250px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; }
+  </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+<body>
 
-  <!-- 1. LOGIN SCREEN -->
-  <div id="loginCard" class="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-700">
-    <h2 class="text-2xl font-bold text-center text-blue-400 mb-6">Employee Login</h2>
-    
-    <div class="space-y-4">
-      <div>
-        <label class="text-sm font-medium text-slate-300">User ID (Casper / Emp ID)</label>
-        <input type="text" id="loginUser" placeholder="Enter your ID" 
-          class="w-full mt-1 p-3 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 text-white">
-      </div>
-      <div>
-        <label class="text-sm font-medium text-slate-300">Password</label>
-        <input type="password" id="loginPass" placeholder="••••••••" 
-          class="w-full mt-1 p-3 bg-slate-900 border border-slate-700 rounded-lg focus:outline-none focus:border-blue-500 text-white">
-      </div>
-      <button onclick="handleLogin()" id="loginBtn"
-        class="w-full py-3 bg-blue-600 hover:bg-blue-700 font-semibold rounded-lg transition duration-200 shadow-md">
-        Login & View Details
-      </button>
-    </div>
-    <p id="loginMsg" class="mt-4 text-sm text-center text-red-400 hidden"></p>
+<div class="container">
+  <div class="header">
+    <h2>OverTime & Payroll Portal</h2>
+    <p>Employee Self-Service Dashboard</p>
   </div>
 
-  <!-- 2. MY RECORDS DASHBOARD -->
-  <div id="portalCard" class="hidden bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-700">
-    <div class="flex justify-between items-center pb-4 border-b border-slate-700 mb-4">
-      <div>
-        <h3 class="text-xl font-bold text-white">My Details</h3>
-        <p class="text-xs text-slate-400">Logged in ID: <span id="activeUser" class="text-blue-400 font-medium"></span></p>
+  <div class="content">
+    <!-- Login Screen -->
+    <div id="loginSection">
+      <div class="input-group">
+        <label for="userId">User ID / Associate ID</label>
+        <input type="text" id="userId" placeholder="Enter ID (e.g. 2333480, 2600309)">
       </div>
-      <button onclick="handleLogout()" class="text-xs bg-red-600/20 text-red-400 hover:bg-red-600/30 px-3 py-1.5 rounded-lg border border-red-500/30">
-        Logout
-      </button>
+      <div class="input-group">
+        <label for="userPass">Password</label>
+        <input type="password" id="userPass" placeholder="Enter Password" onkeydown="if(event.key==='Enter') handleLogin()">
+      </div>
+      <button class="btn-primary" id="loginBtn" onclick="handleLogin()">Login</button>
+      <div id="errorBox" class="error-box"></div>
     </div>
 
-    <!-- Data List -->
-    <div id="resultContent" class="bg-slate-900 p-4 rounded-xl border border-slate-700/80 space-y-2 max-h-[70vh] overflow-y-auto">
-      <!-- Records load here automatically -->
+    <!-- Dashboard Screen -->
+    <div id="dashboardSection" class="dashboard">
+      <div class="profile-bar">
+        <div class="user-info">
+          <h3 id="profileName">Employee Name</h3>
+          <span>ID: <strong id="profileId"></strong></span>
+        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('otTab', this)">OverTime Details</button>
+        <button class="tab-btn" onclick="switchTab('payrollTab', this)">Payroll & Allowances</button>
+      </div>
+
+      <!-- Tab 1: OT Details -->
+      <div id="otTab" class="tab-pane active">
+        <div class="stat-card full" style="margin-bottom: 12px;">
+          <div class="stat-title">Total OverTime Hours</div>
+          <div id="otTotal" class="stat-value highlight" style="font-size: 22px;">0 Hrs</div>
+        </div>
+        <div class="scroll-table">
+          <table class="ot-table">
+            <thead>
+              <tr><th>Date</th><th>OT (Hours)</th></tr>
+            </thead>
+            <tbody id="otTableBody">
+              <!-- Dynamic Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 2: Payroll Details -->
+      <div id="payrollTab" class="tab-pane">
+        <div id="payrollContent">
+          <div class="grid-2">
+            <div class="stat-card">
+              <div class="stat-title">Night Shift Allow.</div>
+              <div id="resNightShift" class="stat-value">₹0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Food Allowance</div>
+              <div id="resFood" class="stat-value">₹0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Active Bonus</div>
+              <div id="resActiveBonus" class="stat-value">₹0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">B Shift Incentive</div>
+              <div id="resBShift" class="stat-value">₹0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Att. Incentive</div>
+              <div id="resAttIncentive" class="stat-value">₹0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">LOPR Days</div>
+              <div id="resLopr" class="stat-value">0</div>
+            </div>
+            <div class="stat-card full">
+              <div class="stat-title">Pending Amount</div>
+              <div id="resPending" class="stat-value pending">₹0</div>
+            </div>
+          </div>
+          <div id="remarksBox" class="stat-card full" style="background: #fffbeb; border-color: #fef3c7; display:none;">
+            <div class="stat-title" style="color: #92400e;">HR Remarks</div>
+            <div id="resRemarks" style="font-size: 13px; color: #92400e; margin-top: 4px;"></div>
+          </div>
+        </div>
+        <div id="noPayrollMsg" style="display:none; text-align: center; color: #6b7280; padding: 20px 0;">
+          Payroll record not updated for this Associate ID.
+        </div>
+      </div>
     </div>
   </div>
+</div>
 
-  <script>
-    // आपका नया Google Apps Script URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzYKnkEwr2phb-FhUm72yq7PW_-ARI5DfotYqex6T3KNZOsCoEcpR35pzBZhZnevnWk/exec";
+<script>
+  // Aapka naya Web App URL yaha set hai
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJlAj2E8axbN7WKSD-R7i46gaI3JmfXZhv9YK7MGeg41lUuE61DfLQqT60MfK9a9id/exec";
 
-    async function handleLogin() {
-      const user = document.getElementById("loginUser").value.trim();
-      const pass = document.getElementById("loginPass").value.trim();
-      const msg = document.getElementById("loginMsg");
-      const btn = document.getElementById("loginBtn");
+  async function handleLogin() {
+    const userId = document.getElementById("userId").value.trim();
+    const password = document.getElementById("userPass").value.trim();
+    const btn = document.getElementById("loginBtn");
+    const errorBox = document.getElementById("errorBox");
 
-      if (!user || !pass) {
-        msg.textContent = "Please enter both ID and Password.";
-        msg.classList.remove("hidden");
-        return;
+    if (!userId || !password) {
+      showError("Please enter both User ID and Password.");
+      return;
+    }
+
+    btn.innerText = "Verifying...";
+    btn.disabled = true;
+    errorBox.style.display = "none";
+
+    try {
+      const response = await fetch(`${SCRIPT_URL}?action=loginAndFetch&userId=${encodeURIComponent(userId)}&password=${encodeURIComponent(password)}`);
+      const res = await response.json();
+
+      if (res.status === "success") {
+        renderDashboard(res);
+      } else {
+        showError(res.message || "Invalid credentials.");
       }
+    } catch (err) {
+      showError("Connection error! Please try again.");
+    } finally {
+      btn.innerText = "Login";
+      btn.disabled = false;
+    }
+  }
 
-      btn.textContent = "Verifying & Loading Data...";
-      btn.disabled = true;
-      msg.classList.add("hidden");
+  function renderDashboard(data) {
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("dashboardSection").style.display = "block";
 
-      try {
-        const res = await fetch(SCRIPT_URL, {
-          method: "POST",
-          body: JSON.stringify({ username: user, password: pass })
+    document.getElementById("profileName").innerText = data.user.name || "Employee";
+    document.getElementById("profileId").innerText = data.user.userId;
+
+    // Render Tab 1: OT
+    if (data.otData) {
+      document.getElementById("otTotal").innerText = (data.otData.totalOt || 0) + " Hours";
+      const tbody = document.getElementById("otTableBody");
+      tbody.innerHTML = "";
+      if (data.otData.daily && data.otData.daily.length > 0) {
+        data.otData.daily.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${item.date}</td><td><strong>${item.hours}</strong></td>`;
+          tbody.appendChild(tr);
         });
-        const response = await res.json();
-
-        if (response.success) {
-          document.getElementById("activeUser").textContent = user;
-          document.getElementById("loginCard").classList.add("hidden");
-          document.getElementById("portalCard").classList.remove("hidden");
-
-          const resultContent = document.getElementById("resultContent");
-          if (response.data) {
-            let html = `<div class="grid grid-cols-1 gap-2">`;
-            for (const [col, val] of Object.entries(response.data)) {
-              html += `
-                <div class="flex justify-between py-2 border-b border-slate-800 text-sm">
-                  <span class="text-slate-400 font-medium">${col}:</span>
-                  <span class="text-slate-100 font-semibold">${val || "-"}</span>
-                </div>`;
-            }
-            html += `</div>`;
-            resultContent.innerHTML = html;
-          } else {
-            resultContent.innerHTML = `<p class="text-amber-400 text-center py-4">Login successful, but no records found for this ID in Data sheet.</p>`;
-          }
-        } else {
-          msg.textContent = response.message || "Invalid credentials.";
-          msg.classList.remove("hidden");
-        }
-      } catch (err) {
-        msg.textContent = "Error connecting to server. Please try again.";
-        msg.classList.remove("hidden");
-      } finally {
-        btn.textContent = "Login & View Details";
-        btn.disabled = false;
+      } else {
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center;">No daily records found</td></tr>`;
       }
     }
 
-    function handleLogout() {
-      document.getElementById("loginUser").value = "";
-      document.getElementById("loginPass").value = "";
-      document.getElementById("portalCard").classList.add("hidden");
-      document.getElementById("loginCard").classList.remove("hidden");
+    // Render Tab 2: Payroll
+    if (data.payrollData) {
+      document.getElementById("payrollContent").style.display = "block";
+      document.getElementById("noPayrollMsg").style.display = "none";
+      const p = data.payrollData;
+      document.getElementById("resNightShift").innerText = "₹" + (p.nightShiftAllowance || 0);
+      document.getElementById("resFood").innerText = "₹" + (p.foodAllowance || 0);
+      document.getElementById("resActiveBonus").innerText = "₹" + (p.activeBonus || 0);
+      document.getElementById("resBShift").innerText = "₹" + (p.bShiftIncentive || 0);
+      document.getElementById("resAttIncentive").innerText = "₹" + (p.femaleAttendanceIncentive || 0);
+      document.getElementById("resLopr").innerText = p.loprDays || "0";
+      document.getElementById("resPending").innerText = "₹" + (p.pendingAmount || 0);
+
+      if (p.hrRemarks && p.hrRemarks.toString().trim() !== "") {
+        document.getElementById("resRemarks").innerText = p.hrRemarks;
+        document.getElementById("remarksBox").style.display = "block";
+      } else {
+        document.getElementById("remarksBox").style.display = "none";
+      }
+    } else {
+      document.getElementById("payrollContent").style.display = "none";
+      document.getElementById("noPayrollMsg").style.display = "block";
     }
-  </script>
+  }
+
+  function switchTab(tabId, el) {
+    document.querySelectorAll(".tab-pane").forEach(pane => pane.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+    document.getElementById(tabId).classList.add("active");
+    el.classList.add("active");
+  }
+
+  function logout() {
+    document.getElementById("dashboardSection").style.display = "none";
+    document.getElementById("loginSection").style.display = "block";
+    document.getElementById("userId").value = "";
+    document.getElementById("userPass").value = "";
+  }
+
+  function showError(msg) {
+    const errorBox = document.getElementById("errorBox");
+    errorBox.innerText = msg;
+    errorBox.style.display = "block";
+  }
+</script>
 </body>
 </html>

@@ -45,14 +45,14 @@
     </div>
 
     <div class="content-area">
-        <!-- Login Box -->
+        <!-- 1. LOGIN SECTION -->
         <div id="loginSection" class="login-box">
             <input type="text" id="associateIdInput" placeholder="Enter ASSOCIATE ID">
             <input type="password" id="passwordInput" placeholder="Enter Password (Optional)">
             <button class="btn-primary" onclick="handleLogin()">Login</button>
         </div>
 
-        <!-- Dashboard Box -->
+        <!-- 2. DASHBOARD SECTION -->
         <div id="dashboardSection" style="display: none;">
             <div class="profile-row">
                 <div class="profile-info">
@@ -95,14 +95,50 @@
     const URL_OT = 'https://docs.google.com/spreadsheets/d/1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0/gviz/tq?tqx=out:json&gid=552193494';
     const URL_PAYROLL = 'https://docs.google.com/spreadsheets/d/1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0/gviz/tq?tqx=out:json&gid=0';
 
-    async function fetchRows(url) {
+    // Sheet ko Header Names ke sath parse karna
+    async function fetchSheetObjects(url) {
         const res = await fetch(`${url}&_=${Date.now()}`);
         const text = await res.text();
         const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
         const data = JSON.parse(jsonStr);
-        return data.table.rows.map(row => 
+
+        // Header Labels extract karna
+        let headers = data.table.cols.map(c => (c.label || '').toUpperCase().trim());
+
+        let rows = data.table.rows.map(row => 
             row.c ? row.c.map(cell => (cell && cell.v !== null && cell.v !== undefined) ? cell.v.toString().trim() : '') : []
         );
+
+        // Agar headers cols me nahi mile, to pehli row ko header manna
+        if (headers.every(h => h === '') && rows.length > 0) {
+            headers = rows[0].map(h => h.toUpperCase().trim());
+            rows = rows.slice(1);
+        }
+
+        return rows.map(r => {
+            const obj = {};
+            headers.forEach((h, idx) => {
+                const cleanKey = h.replace(/[^A-Z0-9]/g, '');
+                if (cleanKey) obj[cleanKey] = r[idx] || '';
+            });
+            // Raw array bhi save rakhein
+            obj._raw = r;
+            return obj;
+        });
+    }
+
+    // Header Matcher Helper
+    function getVal(rowObj, ...keywords) {
+        if (!rowObj) return '';
+        for (const kw of keywords) {
+            const target = kw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            for (const key in rowObj) {
+                if (key !== '_raw' && key.includes(target) && rowObj[key] !== '') {
+                    return rowObj[key];
+                }
+            }
+        }
+        return '';
     }
 
     async function handleLogin() {
@@ -113,15 +149,19 @@
         }
 
         try {
-            const [otRows, payrollRows] = await Promise.all([
-                fetchRows(URL_OT),
-                fetchRows(URL_PAYROLL)
+            const [otData, payrollData] = await Promise.all([
+                fetchSheetObjects(URL_OT),
+                fetchSheetObjects(URL_PAYROLL)
             ]);
 
-            // Sheet 2 (Payroll) me ID match karna (Column 0 = Column A)
-            const payrollRow = payrollRows.find(r => r[0] === inputId);
-            // Sheet 1 (OT) me ID match karna
-            const otRow = otRows.find(r => r[0] === inputId);
+            // ASSOCIATE ID match karna
+            const payrollRow = payrollData.find(r => 
+                getVal(r, 'ASSOCIATEID', 'ID', 'EMPID') === inputId || (r._raw && r._raw.includes(inputId))
+            );
+
+            const otRow = otData.find(r => 
+                getVal(r, 'ASSOCIATEID', 'ID', 'EMPID') === inputId || (r._raw && r._raw.includes(inputId))
+            );
 
             if (!payrollRow && !otRow) {
                 alert(`ASSOCIATE ID: ${inputId} का डेटा नहीं मिला!`);
@@ -131,24 +171,25 @@
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
 
-            // --- NAYE COLUMN ORDER KE MUTABIQ MAPPING ---
+            // Profile info
+            document.getElementById('empName').innerText = getVal(payrollRow, 'NAME', 'ASSOCIATENAME') || getVal(otRow, 'NAME', 'ASSOCIATENAME') || 'Associate';
+            document.getElementById('empIdDisplay').innerText = inputId;
+
+            // Payroll Cards Data (Exact Header Match)
             if (payrollRow) {
-                document.getElementById('empName').innerText = payrollRow[1] || 'Associate';       // Column B: Name
-                document.getElementById('empIdDisplay').innerText = inputId;                       // Column A: ID
-                
-                // Column C (Index 2) par Gender hai, isliye indexing ek step aage shift hui:
-                document.getElementById('nightShift').innerText = '₹' + (payrollRow[3] || '0');     // Column D: Night Shift
-                document.getElementById('foodAllowance').innerText = '₹' + (payrollRow[4] || '0');  // Column E: Food Allowance
-                document.getElementById('activeBonus').innerText = '₹' + (payrollRow[5] || '0');    // Column F: Active Bonus
-                document.getElementById('bShift').innerText = '₹' + (payrollRow[6] || '0');         // Column G: B Shift Incentive
-                document.getElementById('attIncentive').innerText = '₹' + (payrollRow[7] || '0');   // Column H: Att Incentive
-                document.getElementById('loprDays').innerText = payrollRow[8] || '0';               // Column I: LOPR Days
-                document.getElementById('pendingAmount').innerText = '₹' + (payrollRow[9] || '0');  // Column J: Pending Amount
+                document.getElementById('nightShift').innerText = '₹' + (getVal(payrollRow, 'NIGHTSHIFTALLOW', 'NIGHTSHIFT', 'NIGHT') || '0');
+                document.getElementById('foodAllowance').innerText = '₹' + (getVal(payrollRow, 'FOODALLOWANCE', 'FOOD') || '0');
+                document.getElementById('activeBonus').innerText = '₹' + (getVal(payrollRow, 'ACTIVEBONUS', 'ACTIVE') || '0');
+                document.getElementById('bShift').innerText = '₹' + (getVal(payrollRow, 'BSHIFTINCENTIVE', 'BSHIFT') || '0');
+                document.getElementById('attIncentive').innerText = '₹' + (getVal(payrollRow, 'ATTINCENTIVE', 'ATTENDANCE') || '0');
+                document.getElementById('loprDays').innerText = getVal(payrollRow, 'LOPRDAYS', 'LOPR') || '0';
+                document.getElementById('pendingAmount').innerText = '₹' + (getVal(payrollRow, 'PENDINGAMOUNT', 'PENDING') || '0');
             }
 
+            // OverTime Cards Data
             if (otRow) {
-                document.getElementById('otHours').innerText = otRow[2] || '0';                     // OT Sheet Column C
-                document.getElementById('otAmount').innerText = '₹' + (otRow[3] || '0');           // OT Sheet Column D
+                document.getElementById('otHours').innerText = getVal(otRow, 'OTHOURS', 'TOTALOT', 'HOURS') || '0';
+                document.getElementById('otAmount').innerText = '₹' + (getVal(otRow, 'OTAMOUNT', 'TOTALAMOUNT', 'AMOUNT') || '0');
             }
 
         } catch (err) {
@@ -166,7 +207,8 @@
 
     function handleLogout() {
         document.getElementById('associateIdInput').value = '';
-        document.getElementById('passwordInput').value = '';
+        const pass = document.getElementById('passwordInput');
+        if (pass) pass.value = '';
         document.getElementById('dashboardSection').style.display = 'none';
         document.getElementById('loginSection').style.display = 'flex';
     }

@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OverTime & Payroll Portal</title>
-    <!-- PapaParse CDN to parse CSV cleanly -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f1f5f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 16px; }
@@ -22,18 +20,18 @@
         .btn-primary { background: #1a73e8; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
         .btn-primary:hover { background: #1557b0; }
         
-        /* Profile Header */
+        /* Profile */
         .profile-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .profile-info h3 { font-size: 18px; color: #0f172a; margin-bottom: 3px; }
         .profile-info p { font-size: 13px; color: #64748b; font-weight: 500; }
         .btn-logout { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
         
-        /* Tabs */
+        /* Navigation Tabs */
         .tab-nav { display: flex; border-bottom: 1.5px solid #e2e8f0; margin-bottom: 16px; }
         .tab-btn { flex: 1; padding: 10px; background: none; border: none; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; }
         .tab-btn.active { color: #1a73e8; border-bottom-color: #1a73e8; }
         
-        /* Payroll Cards */
+        /* Payroll Grid */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .card-stat { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; }
         .card-stat.full-width { grid-column: span 2; }
@@ -44,18 +42,18 @@
         .remarks-box { background: #fffbeb; border-color: #fef3c7; }
         .remarks-text { font-size: 13px !important; font-weight: 500 !important; color: #92400e !important; }
 
-        /* OverTime UI */
+        /* OverTime Table UI */
         .ot-summary-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px; text-align: center; margin-bottom: 14px; }
         .ot-summary-box span { font-size: 12px; font-weight: 700; color: #1e40af; text-transform: uppercase; }
         .ot-summary-box p { font-size: 24px; font-weight: 800; color: #1e3a8a; margin-top: 4px; }
         
-        .table-wrap { max-height: 300px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .table-wrap { max-height: 320px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
         .ot-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
-        .ot-table th { background: #f8fafc; color: #475569; font-weight: 600; padding: 10px 12px; position: sticky; top: 0; border-bottom: 1px solid #cbd5e1; }
-        .ot-table td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
+        .ot-table th { background: #f8fafc; color: #475569; font-weight: 600; padding: 10px 14px; position: sticky; top: 0; border-bottom: 1.5px solid #cbd5e1; }
+        .ot-table td { padding: 9px 14px; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
         .ot-table tr:hover { background: #f8fafc; }
         .ot-badge { background: #dcfce7; color: #15803d; font-weight: 700; padding: 3px 8px; border-radius: 6px; display: inline-block; }
-        .zero-badge { color: #94a3b8; font-weight: 500; }
+        .zero-badge { color: #64748b; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -90,7 +88,7 @@
                 <button class="tab-btn" id="payrollTabBtn" onclick="toggleTab('payroll')">Payroll & Allowances</button>
             </div>
 
-            <!-- Tab 1: OverTime Table (Sheet 1) -->
+            <!-- Tab 1: OverTime Table View -->
             <div id="otTab">
                 <div class="ot-summary-box">
                     <span>Total OverTime Hours</span>
@@ -105,13 +103,13 @@
                             </tr>
                         </thead>
                         <tbody id="otTableBody">
-                            <!-- Rows will be injected here -->
+                            <!-- All Dates will appear here -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Tab 2: Payroll & Allowances (Sheet 2) -->
+            <!-- Tab 2: Payroll & Allowances -->
             <div id="payrollTab" style="display: none;">
                 <div class="grid-2">
                     <div class="card-stat"><span>1. FEMALE ATT. INCENTIVE</span><p id="femaleAtt">₹0</p></div>
@@ -132,26 +130,25 @@
 </div>
 
 <script>
-    // CSV Endpoints (Direct and reliable fetch)
-    const URL_OT = 'https://docs.google.com/spreadsheets/d/1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0/gviz/tq?tqx=out:csv&gid=552193494';
-    const URL_PAYROLL = 'https://docs.google.com/spreadsheets/d/1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0/gviz/tq?tqx=out:csv&gid=0';
+    const SHEET_OT_ID = '1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0';
+    const GID_OT = '552193494';
 
-    async function fetchCSVData(url) {
-        const res = await fetch(`${url}&_=${Date.now()}`);
-        const csvText = await res.text();
-        return new Promise((resolve) => {
-            Papa.parse(csvText, {
-                header: false,
-                skipEmptyLines: false,
-                complete: (results) => {
-                    const allRows = results.data || [];
-                    if (allRows.length === 0) return resolve({ headers: [], rows: [] });
-                    const headers = allRows[0].map(h => (h || '').trim());
-                    const rows = allRows.slice(1).map(r => r.map(c => (c || '').trim()));
-                    resolve({ headers, rows });
-                }
-            });
-        });
+    const SHEET_PAYROLL_ID = '1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0';
+    const GID_PAYROLL = '0';
+
+    async function fetchFullSheet(sheetId, gid) {
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&headers=0&gid=${gid}&_=${Date.now()}`;
+        const res = await fetch(url);
+        const text = await res.text();
+        const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+        const data = JSON.parse(jsonStr);
+
+        return data.table.rows.map(row => 
+            (row.c || []).map(cell => {
+                if (!cell || cell.v === null || cell.v === undefined) return '';
+                return (cell.f ? cell.f : cell.v).toString().trim();
+            })
+        );
     }
 
     async function handleLogin() {
@@ -164,19 +161,23 @@
         }
 
         try {
-            const [otData, payrollData] = await Promise.all([
-                fetchCSVData(URL_OT),
-                fetchCSVData(URL_PAYROLL)
+            const [otGrid, payrollGrid] = await Promise.all([
+                fetchFullSheet(SHEET_OT_ID, GID_OT),
+                fetchFullSheet(SHEET_PAYROLL_ID, GID_PAYROLL)
             ]);
 
-            // Sheet 1: Col A (Casper/ID), Col B (Emp id), Col C (Casper)
-            const otRow = otData.rows.find(r => r[0] === inputId || r[1] === inputId || r[2] === inputId);
-            
-            // Sheet 2: Col A (ASSOCIATE ID)
-            const payrollRow = payrollData.rows.find(r => r[0] === inputId || (otRow && (r[0] === otRow[0] || r[0] === otRow[2])));
+            const otHeaders = otGrid[0] || [];
+            const otDataRows = otGrid.slice(1);
+
+            // Col A (Index 0), Col B (Index 1), Col C (Index 2)
+            const otRow = otDataRows.find(r => r[0] === inputId || r[1] === inputId || r[2] === inputId);
+
+            // Payroll Sheet Match (Col A)
+            const payrollDataRows = payrollGrid.slice(1);
+            const payrollRow = payrollDataRows.find(r => r[0] === inputId || (otRow && (r[0] === otRow[0] || r[0] === otRow[2])));
 
             if (!otRow && !payrollRow) {
-                alert(`ID: ${inputId} का कोई डेटा नहीं मिला!`);
+                alert(`ID: ${inputId} का डेटा नहीं मिला!`);
                 return;
             }
 
@@ -189,41 +190,41 @@
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
 
-            // Employee Profile
+            // Profile Info
             const name = (otRow && otRow[3]) || (payrollRow && payrollRow[1]) || 'Associate';
             const dept = (otRow && otRow[4]) || 'N/A';
             document.getElementById('empName').innerText = name;
             document.getElementById('empIdDisplay').innerText = inputId;
             document.getElementById('empDept').innerText = dept;
 
-            // --- 1. OVERTIME DATE-WISE TABLE (Sheet 1) ---
+            // --- 1. OVERTIME TABLE: EXACT HOURS OR 0 FOR BLANK ---
             const tbody = document.getElementById('otTableBody');
             tbody.innerHTML = '';
             let totalOt = 0;
 
             if (otRow) {
                 // Dates start from Column F (Index 5)
-                for (let i = 5; i < otData.headers.length; i++) {
-                    const dateTitle = otData.headers[i];
-                    if (!dateTitle) continue;
+                for (let col = 5; col < otHeaders.length; col++) {
+                    const dateText = otHeaders[col];
+                    if (!dateText) continue;
 
-                    const valStr = otRow[i] || '0';
-                    const val = parseFloat(valStr) || 0;
-                    totalOt += val;
+                    const rawVal = otRow[col];
+                    const numVal = parseFloat(rawVal) || 0;
+                    totalOt += numVal;
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>${dateTitle}</td>
-                        <td style="text-align: right;">${val > 0 ? `<span class="ot-badge">${val} Hrs</span>` : `<span class="zero-badge">-</span>`}</td>
+                        <td><strong>${dateText}</strong></td>
+                        <td style="text-align: right;">${numVal > 0 ? `<span class="ot-badge">${numVal} Hrs</span>` : `<span class="zero-badge">0 Hrs</span>`}</td>
                     `;
                     tbody.appendChild(tr);
                 }
             } else {
-                tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:#94a3b8;padding:16px;">No OverTime record found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:#94a3b8;padding:16px;">No OT record found</td></tr>';
             }
             document.getElementById('totalOtHours').innerText = `${totalOt} Hrs`;
 
-            // --- 2. PAYROLL DATA (Sheet 2) ---
+            // --- 2. PAYROLL & ALLOWANCES (11 Fields) ---
             if (payrollRow) {
                 document.getElementById('femaleAtt').innerText = '₹' + (payrollRow[3] || '0');
                 document.getElementById('nightShift').innerText = '₹' + (payrollRow[4] || '0');

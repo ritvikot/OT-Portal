@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OverTime & Payroll Portal</title>
-    <!-- CSV Parsing के लिए PapaParse CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f1f5f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 16px; }
@@ -14,24 +12,18 @@
         .header-banner h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
         .header-banner p { font-size: 13px; opacity: 0.9; }
         .content-area { padding: 20px; }
-        
-        /* Login Form */
         .login-box { display: flex; flex-direction: column; gap: 12px; }
         .login-box input { width: 100%; padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; }
         .login-box input:focus { border-color: #1a73e8; }
         .btn-primary { background: #1a73e8; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
         .btn-primary:hover { background: #1557b0; }
-        
-        /* Dashboard */
         .profile-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .profile-info h3 { font-size: 18px; color: #0f172a; }
         .profile-info p { font-size: 13px; color: #64748b; font-weight: 500; }
         .btn-logout { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
-        
         .tab-nav { display: flex; border-bottom: 1.5px solid #e2e8f0; margin-bottom: 16px; }
         .tab-btn { flex: 1; padding: 10px; background: none; border: none; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; }
         .tab-btn.active { color: #1a73e8; border-bottom-color: #1a73e8; }
-        
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .card-stat { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; }
         .card-stat.full-width { grid-column: span 2; }
@@ -49,10 +41,10 @@
     </div>
 
     <div class="content-area">
-        <!-- 1. LOGIN SCREEN (ID + PASSWORD) -->
+        <!-- 1. LOGIN SCREEN -->
         <div id="loginSection" class="login-box">
             <input type="text" id="associateIdInput" placeholder="Enter ASSOCIATE ID">
-            <input type="password" id="passwordInput" placeholder="Enter Password / DOB">
+            <input type="password" id="passwordInput" placeholder="Enter Password / Mobile (Optional)">
             <button class="btn-primary" onclick="handleLogin()">Login</button>
         </div>
 
@@ -71,7 +63,7 @@
                 <button class="tab-btn active" id="payrollTabBtn" onclick="toggleTab('payroll')">Payroll & Allowances</button>
             </div>
 
-            <!-- Tab 1: Payroll Details -->
+            <!-- Tab: Payroll -->
             <div id="payrollTab">
                 <div class="grid-2">
                     <div class="card-stat"><span>NIGHT SHIFT ALLOW.</span><p id="nightShift">₹0</p></div>
@@ -84,7 +76,7 @@
                 </div>
             </div>
 
-            <!-- Tab 2: OverTime Details -->
+            <!-- Tab: OverTime -->
             <div id="otTab" style="display: none;">
                 <div class="grid-2">
                     <div class="card-stat full-width"><span>TOTAL OT HOURS</span><p id="otHours">0</p></div>
@@ -96,41 +88,39 @@
 </div>
 
 <script>
-    const SHEET_1_URL = 'https://docs.google.com/spreadsheets/d/1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0/gviz/tq?tqx=out:csv&gid=552193494';
-    const SHEET_2_URL = 'https://docs.google.com/spreadsheets/d/1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0/gviz/tq?tqx=out:csv&gid=0';
+    const URL_OT = 'https://docs.google.com/spreadsheets/d/1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0/gviz/tq?tqx=out:json&gid=552193494';
+    const URL_PAYROLL = 'https://docs.google.com/spreadsheets/d/1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0/gviz/tq?tqx=out:json&gid=0';
 
-    // CSV Fetch Helper
-    async function fetchCSV(url) {
+    async function loadSheet(url) {
         const res = await fetch(`${url}&_=${Date.now()}`);
-        const csvText = await res.text();
-        return new Promise((resolve) => {
-            Papa.parse(csvText, {
-                header: true,
-                skipEmptyLines: true,
-                complete: (results) => resolve(results.data)
+        const text = await res.text();
+        const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+        const cols = json.table.cols.map(c => (c.label || '').toUpperCase().trim());
+        
+        return json.table.rows.map(row => {
+            const obj = {};
+            row.c.forEach((cell, idx) => {
+                const header = cols[idx] || `COL_${idx}`;
+                obj[header] = cell && cell.v !== null && cell.v !== undefined ? cell.v.toString().trim() : '';
             });
+            return obj;
         });
     }
 
-    // Header Matcher (Header ke spaces aur extra character ignore karke exact value nikalta hai)
-    function getColValue(row, ...headers) {
+    function getVal(row, ...keywords) {
         if (!row) return '';
-        const normalizedRow = {};
-        Object.keys(row).forEach(k => {
-            const cleanKey = k.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-            normalizedRow[cleanKey] = row[k];
-        });
-
-        for (const h of headers) {
-            const cleanH = h.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-            if (normalizedRow[cleanH] !== undefined && normalizedRow[cleanH] !== '') {
-                return normalizedRow[cleanH].toString().trim();
+        for (const kw of keywords) {
+            const target = kw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            for (const key in row) {
+                const cleanKey = key.replace(/[^A-Z0-9]/g, '');
+                if (cleanKey.includes(target) && row[key] !== '') {
+                    return row[key];
+                }
             }
         }
         return '';
     }
 
-    // Login Handle
     async function handleLogin() {
         const inputId = document.getElementById('associateIdInput').value.trim();
         const inputPass = document.getElementById('passwordInput').value.trim();
@@ -142,52 +132,48 @@
 
         try {
             const [otRows, payrollRows] = await Promise.all([
-                fetchCSV(SHEET_1_URL),
-                fetchCSV(SHEET_2_URL)
+                loadSheet(URL_OT),
+                loadSheet(URL_PAYROLL)
             ]);
 
-            // ASSOCIATE ID से यूजर ढूंढना
-            const payrollUser = payrollRows.find(r => getColValue(r, 'ASSOCIATE ID', 'ID', 'EMP ID') === inputId);
-            const otUser = otRows.find(r => getColValue(r, 'ASSOCIATE ID', 'ID', 'EMP ID') === inputId);
+            const payrollRow = payrollRows.find(r => Object.values(r).includes(inputId));
+            const otRow = otRows.find(r => Object.values(r).includes(inputId));
 
-            if (!payrollUser && !otUser) {
+            if (!payrollRow && !otRow) {
                 alert(`ASSOCIATE ID: ${inputId} नहीं मिली!`);
                 return;
             }
 
-            // Password Verification (Agar Sheet me Password/DOB/Phone column hai)
-            const actualUser = payrollUser || otUser;
-            const sheetPassword = getColValue(actualUser, 'PASSWORD', 'DOB', 'MOBILE', 'PHONE');
-            
-            if (sheetPassword && inputPass && sheetPassword !== inputPass) {
-                alert("गलत पासवर्ड! कृपया सही पासवर्ड दर्ज करें।");
+            // Password check (यदि पासवर्ड कॉलम मौजूद हो)
+            const actualRow = payrollRow || otRow;
+            const passVal = getVal(actualRow, 'PASSWORD', 'DOB', 'MOBILE', 'PHONE');
+            if (passVal && inputPass && passVal !== inputPass) {
+                alert("गलत पासवर्ड!");
                 return;
             }
 
-            // Dashboard दिखाना
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
 
-            // Profile Data
-            const name = getColValue(payrollUser, 'NAME', 'ASSOCIATE NAME') || getColValue(otUser, 'NAME', 'ASSOCIATE NAME') || 'Associate';
-            document.getElementById('empName').innerText = name;
+            // Profile info
+            document.getElementById('empName').innerText = getVal(payrollRow, 'NAME') || getVal(otRow, 'NAME') || 'Associate';
             document.getElementById('empIdDisplay').innerText = inputId;
 
-            // Payroll Cards Data (Header matching se accurate data aayega)
-            if (payrollUser) {
-                document.getElementById('nightShift').innerText = '₹' + (getColValue(payrollUser, 'NIGHT SHIFT ALLOW', 'NIGHT SHIFT', 'NIGHT') || '0');
-                document.getElementById('foodAllowance').innerText = '₹' + (getColValue(payrollUser, 'FOOD ALLOWANCE', 'FOOD') || '0');
-                document.getElementById('activeBonus').innerText = '₹' + (getColValue(payrollUser, 'ACTIVE BONUS', 'BONUS') || '0');
-                document.getElementById('bShift').innerText = '₹' + (getColValue(payrollUser, 'B SHIFT INCENTIVE', 'B SHIFT') || '0');
-                document.getElementById('attIncentive').innerText = '₹' + (getColValue(payrollUser, 'ATT INCENTIVE', 'ATTENDANCE INCENTIVE', 'ATT') || '0');
-                document.getElementById('loprDays').innerText = getColValue(payrollUser, 'LOPR DAYS', 'LOPR') || '0';
-                document.getElementById('pendingAmount').innerText = '₹' + (getColValue(payrollUser, 'PENDING AMOUNT', 'PENDING') || '0');
+            // Payroll details (Exact Header Matching)
+            if (payrollRow) {
+                document.getElementById('nightShift').innerText = '₹' + (getVal(payrollRow, 'NIGHTSHIFT', 'NIGHT') || '0');
+                document.getElementById('foodAllowance').innerText = '₹' + (getVal(payrollRow, 'FOODALLOWANCE', 'FOOD') || '0');
+                document.getElementById('activeBonus').innerText = '₹' + (getVal(payrollRow, 'ACTIVEBONUS', 'ACTIVE') || '0');
+                document.getElementById('bShift').innerText = '₹' + (getVal(payrollRow, 'BSHIFT', 'SHIFTINCENTIVE') || '0');
+                document.getElementById('attIncentive').innerText = '₹' + (getVal(payrollRow, 'ATTINCENTIVE', 'ATTENDANCE') || '0');
+                document.getElementById('loprDays').innerText = getVal(payrollRow, 'LOPRDAYS', 'LOPR') || '0';
+                document.getElementById('pendingAmount').innerText = '₹' + (getVal(payrollRow, 'PENDINGAMOUNT', 'PENDING') || '0');
             }
 
-            // OverTime Cards Data
-            if (otUser) {
-                document.getElementById('otHours').innerText = getColValue(otUser, 'OT HOURS', 'TOTAL OT HOURS', 'HOURS') || '0';
-                document.getElementById('otAmount').innerText = '₹' + (getColValue(otUser, 'OT AMOUNT', 'TOTAL OT AMOUNT', 'AMOUNT') || '0');
+            // OT details
+            if (otRow) {
+                document.getElementById('otHours').innerText = getVal(otRow, 'OTHOURS', 'TOTALOT', 'HOURS') || '0';
+                document.getElementById('otAmount').innerText = '₹' + (getVal(otRow, 'OTAMOUNT', 'TOTALAMOUNT', 'AMOUNT') || '0');
             }
 
         } catch (err) {
@@ -197,22 +183,10 @@
     }
 
     function toggleTab(tab) {
-        const payrollTab = document.getElementById('payrollTab');
-        const otTab = document.getElementById('otTab');
-        const payrollTabBtn = document.getElementById('payrollTabBtn');
-        const otTabBtn = document.getElementById('otTabBtn');
-
-        if (tab === 'payroll') {
-            payrollTab.style.display = 'block';
-            otTab.style.display = 'none';
-            payrollTabBtn.classList.add('active');
-            otTabBtn.classList.remove('active');
-        } else {
-            payrollTab.style.display = 'none';
-            otTab.style.display = 'block';
-            otTabBtn.classList.add('active');
-            payrollTabBtn.classList.remove('active');
-        }
+        document.getElementById('payrollTab').style.display = tab === 'payroll' ? 'block' : 'none';
+        document.getElementById('otTab').style.display = tab === 'ot' ? 'block' : 'none';
+        document.getElementById('payrollTabBtn').classList.toggle('active', tab === 'payroll');
+        document.getElementById('otTabBtn').classList.toggle('active', tab === 'ot');
     }
 
     function handleLogout() {

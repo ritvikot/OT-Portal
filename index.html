@@ -9,22 +9,19 @@
     body { background-color: #f1f5f9; color: #1e293b; padding: 24px 16px; }
     .container { max-width: 1300px; margin: 0 auto; }
     
-    /* Header */
     .header { background: #0f172a; color: #fff; padding: 20px 24px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
     .header h1 { font-size: 1.25rem; font-weight: 600; }
     .status-badge { background: #10b981; color: #fff; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 500; }
 
-    /* Controls & Tabs */
     .controls-panel { background: #ffffff; padding: 16px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
     .tabs { display: flex; gap: 8px; }
     .tab-btn { padding: 8px 16px; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 600; color: #475569; transition: all 0.2s; }
     .tab-btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
     
     .search-box { flex: 1; max-width: 350px; position: relative; }
-    .search-box input { width: 100%; padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.875rem; outline: none; transition: border-color 0.2s; }
+    .search-box input { width: 100%; padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.875rem; outline: none; }
     .search-box input:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
 
-    /* Table Container */
     .table-card { background: #ffffff; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07); overflow: hidden; }
     .stats-bar { padding: 10px 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-size: 0.8rem; color: #64748b; }
     .table-wrapper { overflow-x: auto; max-height: 650px; }
@@ -35,31 +32,27 @@
     tr:hover td { background-color: #f8fafc; }
     tr:nth-child(even) td { background-color: #fafafa; }
 
-    /* Loading / Messages */
     .loader { padding: 40px; text-align: center; color: #64748b; font-size: 0.95rem; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Header -->
   <div class="header">
     <h1>Live Workforce Portal</h1>
     <span class="status-badge">● Live Synced</span>
   </div>
 
-  <!-- Tabs & Search -->
   <div class="controls-panel">
     <div class="tabs">
-      <button class="tab-btn active" onclick="switchSource('sheet1')">OverTime (MH)</button>
-      <button class="tab-btn" onclick="switchSource('sheet2')">Payroll Output</button>
+      <button class="tab-btn active" id="btn-sheet1" onclick="switchSource('sheet1')">OverTime (MH)</button>
+      <button class="tab-btn" id="btn-sheet2" onclick="switchSource('sheet2')">Payroll Output</button>
     </div>
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="Search Emp ID, Name, Department..." onkeyup="filterTable()" />
     </div>
   </div>
 
-  <!-- Table Card -->
   <div class="table-card">
     <div class="stats-bar" id="recordCount">Loading records...</div>
     <div class="table-wrapper">
@@ -73,7 +66,6 @@
 </div>
 
 <script>
-  // Aapke dono Sheets ke exact parameters configured hain:
   const SOURCES = {
     sheet1: {
       id: '1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0',
@@ -102,12 +94,10 @@
     fetch(url)
       .then(res => res.text())
       .then(raw => {
-        // GViz wrapper strip
         const json = JSON.parse(raw.substring(47).slice(0, -2));
         const cols = json.table.cols;
         const rows = json.table.rows;
 
-        // Render Header
         const thead = document.getElementById('tableHead');
         let headHtml = '<tr>';
         cols.forEach((col, idx) => {
@@ -116,7 +106,6 @@
         headHtml += '</tr>';
         thead.innerHTML = headHtml;
 
-        // Render Body
         const tbody = document.getElementById('tableBody');
         let bodyHtml = '';
         rows.forEach(row => {
@@ -133,10 +122,10 @@
         loader.style.display = 'none';
         table.style.display = 'table';
         document.getElementById('recordCount').innerText = `Total Records: ${rows.length}`;
-        filterTable(); // Re-apply filter if any search term exists
+        filterTable();
       })
       .catch(err => {
-        loader.innerText = 'Error loading data. Google Sheet Share settings me "Anyone with the link can view" check karein.';
+        loader.innerText = 'Error loading data. Google Sheet Share settings check karein.';
         console.error(err);
       });
   }
@@ -144,7 +133,7 @@
   function switchSource(sourceKey) {
     currentSource = sourceKey;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    document.getElementById(`btn-${sourceKey}`).classList.add('active');
     loadSheetData(sourceKey);
   }
 
@@ -162,7 +151,6 @@
     document.getElementById('recordCount').innerText = `Showing ${visibleCount} of ${rows.length} records`;
   }
 
-  // Initial Load
   loadSheetData('sheet1');
 </script>
 </body>

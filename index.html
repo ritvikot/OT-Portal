@@ -7,7 +7,7 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #f1f5f9; padding: 20px 12px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
-        .dashboard-card { background: #ffffff; width: 100%; max-width: 490px; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+        .dashboard-card { background: #ffffff; width: 100%; max-width: 500px; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
         .header-banner { background: #1a73e8; color: white; padding: 20px 16px; text-align: center; }
         .header-banner h2 { font-size: 20px; font-weight: 700; margin-bottom: 3px; }
         .header-banner p { font-size: 13px; opacity: 0.9; }
@@ -36,7 +36,7 @@
         .ot-summary span { font-size: 12px; font-weight: 700; color: #1e40af; text-transform: uppercase; }
         .ot-summary h3 { font-size: 24px; font-weight: 800; color: #1e3a8a; margin-top: 3px; }
         
-        .table-wrap { max-height: 350px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 8px; }
+        .table-wrap { max-height: 380px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 8px; }
         .ot-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
         .ot-table th { background: #f8fafc; color: #475569; font-weight: 600; padding: 10px 14px; position: sticky; top: 0; border-bottom: 1px solid #cbd5e1; z-index: 2; }
         .ot-table td { padding: 9px 14px; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
@@ -61,7 +61,7 @@
     </div>
 
     <div class="content-area">
-        <!-- LOGIN SECTION -->
+        <!-- 1. LOGIN SECTION -->
         <div id="loginSection" class="login-box">
             <input type="text" id="empIdInput" class="input-box" placeholder="Enter ASSOCIATE ID / CASPER ID">
             <input type="password" id="passInput" class="input-box" placeholder="Enter Emp ID / Password (Optional)">
@@ -69,7 +69,7 @@
             <div id="loginMsg" style="color: #dc2626; font-size: 13px; text-align: center; margin-top: 4px;"></div>
         </div>
 
-        <!-- DASHBOARD SECTION -->
+        <!-- 2. DASHBOARD SECTION -->
         <div id="dashboardSection" style="display: none;">
             <div class="profile-bar">
                 <div>
@@ -133,15 +133,22 @@
     const PAYROLL_SHEET_ID = "1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0";
     const PAYROLL_GID = "0";
 
-    async function fetchFullSheet(sheetId, gid) {
-        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq=select%20*&headers=0&gid=${gid}&_=${Date.now()}`;
+    // All 31 Dates from 21-August-26 to 20-September-26
+    const FULL_DATES = [
+        "21-August-26", "22-August-26", "23-August-26", "24-August-26", "25-August-26",
+        "26-August-26", "27-August-26", "28-August-26", "29-August-26", "30-August-26", "31-August-26",
+        "1-September-26", "2-September-26", "3-September-26", "4-September-26", "5-September-26",
+        "6-September-26", "7-September-26", "8-September-26", "9-September-26", "10-September-26",
+        "11-September-26", "12-September-26", "13-September-26", "14-September-26", "15-September-26",
+        "16-September-26", "17-September-26", "18-September-26", "19-September-26", "20-September-26"
+    ];
+
+    // Parser for TSV / CSV / GViz
+    async function fetchSheetData(sheetId, gid) {
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=tsv&gid=${gid}&_=${Date.now()}`;
         const res = await fetch(url);
         const text = await res.text();
-        const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
-
-        return (json.table.rows || []).map(r => 
-            (r.c || []).map(c => (c && c.v !== null && c.v !== undefined) ? (c.f ? c.f : c.v).toString().trim() : '')
-        );
+        return text.split(/\r?\n/).map(row => row.split('\t').map(c => c.trim().replace(/^"|"$/g, '')));
     }
 
     async function handleLogin() {
@@ -151,29 +158,24 @@
         msg.innerText = "";
 
         if (!inputId) {
-            msg.innerText = "कृपया ASSOCIATE ID दर्ज करें!";
+            msg.innerText = "कृपया ID दर्ज करें!";
             return;
         }
 
         msg.style.color = "#2563eb";
-        msg.innerText = "डेटा लोड हो रहा है, कृपया प्रतीक्षा करें...";
+        msg.innerText = "डेटा लोड हो रहा है...";
 
         try {
             const [otGrid, payrollGrid] = await Promise.all([
-                fetchFullSheet(OT_SHEET_ID, OT_GID),
-                fetchFullSheet(PAYROLL_SHEET_ID, PAYROLL_GID)
+                fetchSheetData(OT_SHEET_ID, OT_GID),
+                fetchSheetData(PAYROLL_SHEET_ID, PAYROLL_GID)
             ]);
 
-            // Row 0 has the exact Headers from Google Sheet (21-Aug to 20-Sep...)
-            const otHeaders = otGrid[0] || [];
-            const otRows = otGrid.slice(1);
+            // Match in OT Sheet (Col A = 0, Col B = 1, Col C = 2)
+            const otRow = otGrid.find(r => r[0] === inputId || r[1] === inputId || r[2] === inputId);
 
-            // Match ID in OT Sheet (Col A, B, or C)
-            const otRow = otRows.find(r => r.some((val, idx) => idx <= 2 && val.toLowerCase() === inputId.toLowerCase()));
-            
-            // Match ID in Payroll Sheet (Col A)
-            const payrollRows = payrollGrid.slice(1);
-            const payrollRow = payrollRows.find(r => r[0] && r[0].toLowerCase() === inputId.toLowerCase());
+            // Match in Payroll Sheet (Col A = 0)
+            const payrollRow = payrollGrid.find(r => r[0] === inputId || (otRow && (r[0] === otRow[0] || r[0] === otRow[2])));
 
             if (!otRow && !payrollRow) {
                 msg.style.color = "#dc2626";
@@ -181,7 +183,7 @@
                 return;
             }
 
-            // Optional Password Check
+            // Password check (Emp ID in Col B)
             if (inputPass && otRow && otRow[1] && otRow[1].toLowerCase() !== inputPass.toLowerCase()) {
                 msg.style.color = "#dc2626";
                 msg.innerText = "गलत पासवर्ड / Emp ID!";
@@ -191,34 +193,32 @@
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
 
-            // Set Profile Header
+            // Profile Header
             const name = (otRow && otRow[3]) || (payrollRow && payrollRow[1]) || 'Employee';
             const dept = (otRow && otRow[4]) || 'MH';
             document.getElementById('nameDisplay').innerText = name;
             document.getElementById('idDisplay').innerText = inputId;
             document.getElementById('deptDisplay').innerText = dept;
 
-            // --- 1. DYNAMICALLY LOAD ALL DATES (Col F / Index 5 till Last Date) ---
+            // --- 1. POPULATE 21-AUG TO 20-SEP OVERTIME TABLE ---
             const tbody = document.getElementById('otTableBody');
             tbody.innerHTML = '';
             let totalOt = 0;
 
             if (otRow) {
-                for (let colIdx = 5; colIdx < otHeaders.length; colIdx++) {
-                    const dateHeader = otHeaders[colIdx];
-                    if (!dateHeader) continue; // skip blank columns if any
-
-                    const cellVal = otRow[colIdx] || '';
-                    const numVal = parseFloat(cellVal) || 0;
+                FULL_DATES.forEach((dateLabel, idx) => {
+                    const colIndex = 5 + idx; // Col F is Index 5
+                    const rawVal = otRow[colIndex] || '0';
+                    const numVal = parseFloat(rawVal) || 0;
                     totalOt += numVal;
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td><strong>${dateHeader}</strong></td>
+                        <td><strong>${dateLabel}</strong></td>
                         <td style="text-align: right;">${numVal > 0 ? `<span class="ot-badge">${numVal} Hrs</span>` : `<span class="zero-badge">0 Hrs</span>`}</td>
                     `;
                     tbody.appendChild(tr);
-                }
+                });
             }
             document.getElementById('totalHoursDisplay').innerText = `${totalOt} Hrs`;
 
@@ -229,8 +229,8 @@
                 document.getElementById('p3').innerText = '₹' + (payrollRow[5] || '0');
                 document.getElementById('p4').innerText = '₹' + (payrollRow[6] || '0');
                 document.getElementById('p5').innerText = '₹' + (payrollRow[7] || '0');
-                document.getElementById('p6').innerText = ' ' + (payrollRow[8] || '0');
-                document.getElementById('p7').innerText = ' ' + (payrollRow[9] || '0');
+                document.getElementById('p6').innerText = '₹' + (payrollRow[8] || '0');
+                document.getElementById('p7').innerText = '₹' + (payrollRow[9] || '0');
                 document.getElementById('p8').innerText = '₹' + (payrollRow[10] || '0');
                 document.getElementById('p9').innerText = payrollRow[11] || '0';
                 document.getElementById('p10').innerText = '₹' + (payrollRow[12] || '0');
@@ -240,7 +240,7 @@
         } catch (err) {
             console.error("Fetch error:", err);
             msg.style.color = "#dc2626";
-            msg.innerText = "डेटा लोड करने में समस्या आई। कृपया शीट शेयरिंग चेक करें।";
+            msg.innerText = "डेटा लोड करने में समस्या आई।";
         }
     }
 

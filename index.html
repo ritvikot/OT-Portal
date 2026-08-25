@@ -3,110 +3,111 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Employee Portal</title>
+  <title>Employee OverTime & Payroll Portal</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-    body { background: #f8fafc; color: #1e293b; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    
-    /* Login Box */
-    .login-box { max-width: 400px; width: 100%; background: #ffffff; padding: 32px 28px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
-    .login-box h2 { font-size: 1.5rem; font-weight: 700; color: #0f172a; text-align: center; margin-bottom: 6px; }
-    .login-box p { font-size: 0.85rem; color: #64748b; text-align: center; margin-bottom: 24px; }
-    .input-group { margin-bottom: 16px; }
-    .input-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; color: #334155; }
-    .input-group input { width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
-    .input-group input:focus { border-color: #2563eb; }
-    .btn-submit { width: 100%; padding: 12px; background: #2563eb; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background 0.2s; margin-top: 6px; }
-    .btn-submit:hover { background: #1d4ed8; }
-    .error-text { background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 6px; font-size: 0.85rem; text-align: center; margin-top: 14px; display: none; }
+    body { background: #0f172a; color: #1e293b; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
 
-    /* Dashboard */
-    .dashboard-container { display: none; width: 100%; max-width: 1200px; margin: auto; }
-    .dash-header { background: #0f172a; color: #fff; padding: 20px 24px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
-    .dash-header h2 { font-size: 1.25rem; font-weight: 600; }
-    .btn-logout { background: #ef4444; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; }
-    .dash-body { background: #ffffff; padding: 24px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; border-top: none; }
+    /* Search / Login Card */
+    .portal-card { background: #ffffff; width: 100%; max-width: 440px; padding: 32px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); }
+    .portal-card h2 { font-size: 1.5rem; font-weight: 700; color: #0f172a; text-align: center; }
+    .portal-card p { font-size: 0.85rem; color: #64748b; text-align: center; margin: 6px 0 24px 0; }
     
-    .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .stat-tile { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
-    .stat-tile span { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
-    .stat-tile h3 { font-size: 1.4rem; color: #0f172a; margin-top: 6px; font-weight: 700; }
+    .input-field { margin-bottom: 16px; }
+    .input-field label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; color: #334155; }
+    .input-field input { width: 100%; padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; }
+    .input-field input:focus { border-color: #2563eb; }
 
-    .sec-heading { font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 24px 0 12px 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px; }
-    .table-scroll { overflow-x: auto; margin-bottom: 16px; }
+    .btn-search { width: 100%; padding: 12px; background: #2563eb; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
+    .btn-search:hover { background: #1d4ed8; }
+
+    .msg-alert { padding: 10px; border-radius: 6px; font-size: 0.85rem; text-align: center; margin-top: 14px; display: none; }
+    .msg-error { background: #fee2e2; color: #b91c1c; }
+
+    /* Result Dashboard (Hidden by default) */
+    .result-container { display: none; width: 100%; max-width: 1100px; }
+    .res-header { background: #1e293b; color: #ffffff; padding: 20px 24px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
+    .res-header h2 { font-size: 1.3rem; }
+    .btn-back { background: #475569; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+    .btn-back:hover { background: #334155; }
+
+    .res-body { background: #ffffff; padding: 24px; border-radius: 0 0 12px 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .stat-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+    .stat-box span { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+    .stat-box h3 { font-size: 1.3rem; color: #0f172a; margin-top: 4px; }
+
+    .section-label { font-size: 1rem; font-weight: 700; color: #0f172a; margin: 20px 0 10px 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px; }
+    .table-box { overflow-x: auto; margin-bottom: 16px; }
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
     th, td { padding: 10px 14px; border: 1px solid #e2e8f0; text-align: left; }
-    th { background: #1e293b; color: #ffffff; font-weight: 600; }
+    th { background: #0f172a; color: #ffffff; font-weight: 600; }
     tr:nth-child(even) { background: #f8fafc; }
   </style>
 </head>
 <body>
 
-  <!-- 1. LOGIN SCREEN -->
-  <div class="login-box" id="loginScreen">
-    <h2>Employee Login</h2>
-    <p>Apna User ID aur Password daalein</p>
-    
-    <div class="input-group">
+  <!-- 1. SEARCH / LOGIN FORM (Public screen par sirf ye dikhega) -->
+  <div class="portal-card" id="searchBox">
+    <h2>Employee Portal</h2>
+    <p>Apna data dekhne ke liye ID enter karein</p>
+
+    <div class="input-field">
       <label>User ID / Casper ID</label>
-      <input type="text" id="userInput" placeholder="e.g. 2333480" />
-    </div>
-    
-    <div class="input-group">
-      <label>Password</label>
-      <input type="password" id="passInput" placeholder="Password" />
+      <input type="text" id="empIdInput" placeholder="Enter ID (e.g. 2333480)" onkeypress="handleKey(event)" />
     </div>
 
-    <button class="btn-submit" id="loginBtn" onclick="loginEmployee()">Login</button>
-    <div class="error-text" id="errBox">User ID ya Password galat hai.</div>
+    <button class="btn-search" id="submitBtn" onclick="searchRecord()">Search Details</button>
+    <div class="msg-alert msg-error" id="errorNotice">Record nahi mila! Kripya sahi ID daalein.</div>
   </div>
 
-  <!-- 2. DASHBOARD SCREEN (Only User's Private Data) -->
-  <div class="dashboard-container" id="dashScreen">
-    <div class="dash-header">
+  <!-- 2. EMPLOYEE DETAILS VIEW (Sirf Search hone par aayega) -->
+  <div class="result-container" id="resultBox">
+    <div class="res-header">
       <div>
-        <h2 id="nameTag">Welcome</h2>
-        <span id="idTag" style="color: #94a3b8; font-size: 0.8rem;"></span>
+        <h2 id="dispName">Employee Name</h2>
+        <span id="dispId" style="color: #94a3b8; font-size: 0.85rem;"></span>
       </div>
-      <button class="btn-logout" onclick="logoutEmployee()">Logout</button>
+      <button class="btn-back" onclick="goBack()">← New Search</button>
     </div>
 
-    <div class="dash-body">
-      <!-- Top Cards -->
-      <div class="grid-stats">
-        <div class="stat-tile">
+    <div class="res-body">
+      <!-- Quick Summary Cards -->
+      <div class="stats-grid">
+        <div class="stat-box">
           <span>Total OverTime</span>
           <h3 id="cardOT">0 Hrs</h3>
         </div>
-        <div class="stat-tile">
-          <span>Night Shift Allowance</span>
-          <h3 id="cardNight">₹0</h3>
-        </div>
-        <div class="stat-tile">
+        <div class="stat-box">
           <span>Food Allowance</span>
           <h3 id="cardFood">₹0</h3>
         </div>
-        <div class="stat-tile">
+        <div class="stat-box">
+          <span>Night Shift Allowance</span>
+          <h3 id="cardNight">₹0</h3>
+        </div>
+        <div class="stat-box">
           <span>Active Bonus</span>
           <h3 id="cardBonus">₹0</h3>
         </div>
       </div>
 
-      <!-- OverTime MH Table -->
-      <div class="sec-heading">OverTime Summary (MH)</div>
-      <div class="table-scroll">
+      <!-- OverTime Record -->
+      <div class="section-label">OverTime Record (MH)</div>
+      <div class="table-box">
         <table>
-          <thead id="headOT"></thead>
-          <tbody id="bodyOT"></tbody>
+          <thead id="otHead"></thead>
+          <tbody id="otBody"></tbody>
         </table>
       </div>
 
-      <!-- Payroll Table -->
-      <div class="sec-heading">Payroll Output Summary</div>
-      <div class="table-scroll">
+      <!-- Payroll Record -->
+      <div class="section-label">Payroll Summary</div>
+      <div class="table-box">
         <table>
-          <thead id="headPayroll"></thead>
-          <tbody id="bodyPayroll"></tbody>
+          <thead id="payHead"></thead>
+          <tbody id="payBody"></tbody>
         </table>
       </div>
     </div>
@@ -116,7 +117,11 @@
     const SHEET_OT_ID = '1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0';
     const SHEET_PAY_ID = '1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0';
 
-    async function fetchSheetJSON(sheetId, tab) {
+    function handleKey(e) {
+      if (e.key === 'Enter') searchRecord();
+    }
+
+    async function fetchGViz(sheetId, tab) {
       const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tab)}`;
       const res = await fetch(url);
       const txt = await res.text();
@@ -124,134 +129,128 @@
       return { cols: parsed.table.cols, rows: parsed.table.rows };
     }
 
-    async function loginEmployee() {
-      const uId = document.getElementById('userInput').value.trim();
-      const uPass = document.getElementById('passInput').value.trim();
-      const errBox = document.getElementById('errBox');
-      const loginBtn = document.getElementById('loginBtn');
+    async function searchRecord() {
+      const queryId = document.getElementById('empIdInput').value.trim();
+      const err = document.getElementById('errorNotice');
+      const btn = document.getElementById('submitBtn');
 
-      if (!uId || !uPass) {
-        errBox.innerText = 'Dono fields bharna zaroori hai!';
-        errBox.style.display = 'block';
+      if (!queryId) {
+        err.innerText = "Kripya ID daalein!";
+        err.style.display = 'block';
         return;
       }
 
-      errBox.style.display = 'none';
-      loginBtn.innerText = 'Verifying...';
+      err.style.display = 'none';
+      btn.innerText = 'Searching...';
 
       try {
-        // Step A: Check credentials against Users sheet
-        const userSheet = await fetchSheetJSON(SHEET_OT_ID, 'Users');
-        let activeUser = null;
+        // Fetch dono sheets ka data
+        const [otData, payData] = await Promise.all([
+          fetchGViz(SHEET_OT_ID, 'Data'),
+          fetchGViz(SHEET_PAY_ID, 'Sheet1')
+        ]);
 
-        userSheet.rows.forEach(r => {
-          const id = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
-          const pwd = String(r.c[1] ? (r.c[1].f || r.c[1].v || '') : '').trim();
-          const name = r.c[2] ? (r.c[2].f || r.c[2].v || '') : '';
-
-          if (id.toLowerCase() === uId.toLowerCase() && pwd === uPass) {
-            activeUser = { id, name };
+        // 1. Find OT Row
+        let otRow = null;
+        otData.rows.forEach(r => {
+          const col0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
+          const col1 = String(r.c[1] ? (r.c[1].f || r.c[1].v || '') : '').trim();
+          if (col0.toLowerCase() === queryId.toLowerCase() || col1.toLowerCase() === queryId.toLowerCase()) {
+            otRow = r;
           }
         });
 
-        if (!activeUser) {
-          errBox.innerText = 'Invalid User ID ya Password!';
-          errBox.style.display = 'block';
-          loginBtn.innerText = 'Login';
+        // 2. Find Payroll Row
+        let payRow = null;
+        payData.rows.forEach(r => {
+          const col0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
+          if (col0.toLowerCase() === queryId.toLowerCase()) {
+            payRow = r;
+          }
+        });
+
+        if (!otRow && !payRow) {
+          err.innerText = "Is ID ka koi record nahi mila!";
+          err.style.display = 'block';
+          btn.innerText = 'Search Details';
           return;
         }
 
-        // Step B: Load Dashboard for this logged-in user only
-        await renderPersonalPortal(activeUser);
+        // Set Name and ID Header
+        const name = (otRow && otRow.c[3] ? (otRow.c[3].f || otRow.c[3].v) : '') || 
+                     (payRow && payRow.c[1] ? (payRow.c[1].f || payRow.c[1].v) : '') || 'Employee Details';
+        document.getElementById('dispName').innerText = name;
+        document.getElementById('dispId').innerText = `Searched ID: ${queryId}`;
 
-        document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('dashScreen').style.display = 'block';
-        document.body.style.alignItems = 'flex-start';
+        // Populate OT Table & Stat
+        const otHead = document.getElementById('otHead');
+        const otBody = document.getElementById('otBody');
+        let otH = '<tr>';
+        otData.cols.forEach(c => { otH += `<th>${c.label || ''}</th>`; });
+        otH += '</tr>';
+        otHead.innerHTML = otH;
 
-      } catch (err) {
-        console.error(err);
-        errBox.innerText = 'Server error! Google Sheet access check karein.';
-        errBox.style.display = 'block';
+        if (otRow) {
+          let otB = '<tr>';
+          otData.cols.forEach((_, i) => {
+            const cell = otRow.c[i];
+            const val = cell ? (cell.f !== undefined ? cell.f : (cell.v !== null ? cell.v : '')) : '';
+            otB += `<td>${val}</td>`;
+          });
+          otB += '</tr>';
+          otBody.innerHTML = otB;
+
+          const lastCell = otRow.c[otRow.c.length - 1];
+          document.getElementById('cardOT').innerText = `${lastCell ? (lastCell.f || lastCell.v || 0) : 0} Hrs`;
+        } else {
+          otBody.innerHTML = '<tr><td colspan="100%" style="text-align:center;">No OverTime record found.</td></tr>';
+          document.getElementById('cardOT').innerText = '0 Hrs';
+        }
+
+        // Populate Payroll Table & Stats
+        const payHead = document.getElementById('payHead');
+        const payBody = document.getElementById('payBody');
+        let payH = '<tr>';
+        payData.cols.forEach(c => { payH += `<th>${c.label || ''}</th>`; });
+        payH += '</tr>';
+        payHead.innerHTML = payH;
+
+        if (payRow) {
+          let payB = '<tr>';
+          payData.cols.forEach((_, i) => {
+            const cell = payRow.c[i];
+            const val = cell ? (cell.f !== undefined ? cell.f : (cell.v !== null ? cell.v : '')) : '';
+            payB += `<td>${val}</td>`;
+          });
+          payB += '</tr>';
+          payBody.innerHTML = payB;
+
+          document.getElementById('cardNight').innerText = `₹${payRow.c[4] ? (payRow.c[4].v || 0) : 0}`;
+          document.getElementById('cardFood').innerText = `₹${payRow.c[5] ? (payRow.c[5].v || 0) : 0}`;
+          document.getElementById('cardBonus').innerText = `₹${payRow.c[7] ? (payRow.c[7].v || 0) : 0}`;
+        } else {
+          payBody.innerHTML = '<tr><td colspan="100%" style="text-align:center;">No Payroll record found.</td></tr>';
+          document.getElementById('cardNight').innerText = '₹0';
+          document.getElementById('cardFood').innerText = '₹0';
+          document.getElementById('cardBonus').innerText = '₹0';
+        }
+
+        // Switch View
+        document.getElementById('searchBox').style.display = 'none';
+        document.getElementById('resultBox').style.display = 'block';
+
+      } catch (e) {
+        console.error(e);
+        err.innerText = "Error loading data. Google Sheet permissions check karein.";
+        err.style.display = 'block';
       }
-      loginBtn.innerText = 'Login';
+      btn.innerText = 'Search Details';
     }
 
-    async function renderPersonalPortal(user) {
-      document.getElementById('nameTag').innerText = `Welcome, ${user.name}`;
-      document.getElementById('idTag').innerText = `ID: ${user.id}`;
-
-      // 1. Fetch OverTime Sheet Data
-      const otData = await fetchSheetJSON(SHEET_OT_ID, 'Data');
-      const headOT = document.getElementById('headOT');
-      const bodyOT = document.getElementById('bodyOT');
-
-      let hHtml1 = '<tr>';
-      otData.cols.forEach(c => { hHtml1 += `<th>${c.label || ''}</th>`; });
-      hHtml1 += '</tr>';
-      headOT.innerHTML = hHtml1;
-
-      let userOTRow = null;
-      otData.rows.forEach(r => {
-        const rowId = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
-        if (rowId.toLowerCase() === user.id.toLowerCase()) userOTRow = r;
-      });
-
-      if (userOTRow) {
-        let bHtml1 = '<tr>';
-        otData.cols.forEach((_, idx) => {
-          const cell = userOTRow.c[idx];
-          const val = cell ? (cell.f !== undefined ? cell.f : (cell.v !== null ? cell.v : '')) : '';
-          bHtml1 += `<td>${val}</td>`;
-        });
-        bHtml1 += '</tr>';
-        bodyOT.innerHTML = bHtml1;
-
-        const lastC = userOTRow.c[userOTRow.c.length - 1];
-        document.getElementById('cardOT').innerText = `${lastC ? (lastC.f || lastC.v || 0) : 0} Hrs`;
-      } else {
-        bodyOT.innerHTML = '<tr><td colspan="100%" style="text-align:center;">Koi OverTime record nahi mila.</td></tr>';
-      }
-
-      // 2. Fetch Payroll Sheet Data
-      const payData = await fetchSheetJSON(SHEET_PAY_ID, 'Sheet1');
-      const headPay = document.getElementById('headPayroll');
-      const bodyPay = document.getElementById('bodyPayroll');
-
-      let hHtml2 = '<tr>';
-      payData.cols.forEach(c => { hHtml2 += `<th>${c.label || ''}</th>`; });
-      hHtml2 += '</tr>';
-      headPay.innerHTML = hHtml2;
-
-      let userPayRow = null;
-      payData.rows.forEach(r => {
-        const rowId = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
-        if (rowId.toLowerCase() === user.id.toLowerCase()) userPayRow = r;
-      });
-
-      if (userPayRow) {
-        let bHtml2 = '<tr>';
-        payData.cols.forEach((_, idx) => {
-          const cell = userPayRow.c[idx];
-          const val = cell ? (cell.f !== undefined ? cell.f : (cell.v !== null ? cell.v : '')) : '';
-          bHtml2 += `<td>${val}</td>`;
-        });
-        bHtml2 += '</tr>';
-        bodyPay.innerHTML = bHtml2;
-
-        document.getElementById('cardNight').innerText = `₹${userPayRow.c[4] ? (userPayRow.c[4].v || 0) : 0}`;
-        document.getElementById('cardFood').innerText = `₹${userPayRow.c[5] ? (userPayRow.c[5].v || 0) : 0}`;
-        document.getElementById('cardBonus').innerText = `₹${userPayRow.c[7] ? (userPayRow.c[7].v || 0) : 0}`;
-      } else {
-        bodyPay.innerHTML = '<tr><td colspan="100%" style="text-align:center;">Koi Payroll record nahi mila.</td></tr>';
-      }
-    }
-
-    function logoutEmployee() {
-      document.getElementById('userInput').value = '';
-      document.getElementById('passInput').value = '';
-      document.getElementById('dashScreen').style.display = 'none';
-      document.getElementById('loginScreen').style.display = 'block';
-      document.body.style.alignItems = 'center';
+    function goBack() {
+      document.getElementById('empIdInput').value = '';
+      document.getElementById('resultBox').style.display = 'none';
+      document.getElementById('searchBox').style.display = 'block';
     }
   </script>
 </body>

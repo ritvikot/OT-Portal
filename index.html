@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Employee Self Service Portal</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
     body { background: #0f172a; color: #1e293b; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
 
-    /* Login / Search Screen */
+    /* Search Box */
     .portal-card { background: #ffffff; width: 100%; max-width: 420px; padding: 32px 28px; border-radius: 16px; box-shadow: 0 20px 30px rgba(0,0,0,0.3); }
     .portal-card h2 { font-size: 1.5rem; font-weight: 700; color: #0f172a; text-align: center; }
     .portal-card p { font-size: 0.85rem; color: #64748b; text-align: center; margin: 6px 0 24px 0; }
@@ -20,11 +20,10 @@
 
     .btn-search { width: 100%; padding: 12px; background: #2563eb; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
     .btn-search:hover { background: #1d4ed8; }
-
     .msg-alert { padding: 10px; border-radius: 6px; font-size: 0.85rem; text-align: center; margin-top: 14px; display: none; background: #fee2e2; color: #b91c1c; }
 
-    /* Dashboard Container */
-    .result-container { display: none; width: 100%; max-width: 1100px; margin: auto; }
+    /* Dashboard */
+    .result-container { display: none; width: 100%; max-width: 1000px; margin: auto; }
     .res-header { background: #1e293b; color: #ffffff; padding: 18px 24px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
     .res-header h2 { font-size: 1.3rem; }
     .btn-back { background: #ef4444; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
@@ -32,36 +31,34 @@
 
     .res-body { background: #ffffff; padding: 24px; border-radius: 0 0 12px 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     
-    /* Top Stat Tiles */
+    /* Stats */
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
     .stat-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; }
-    .stat-box span { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-box span { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
     .stat-box h3 { font-size: 1.4rem; color: #0f172a; margin-top: 6px; font-weight: 700; }
 
-    /* Tab Controller */
+    /* Tabs */
     .tab-nav { display: flex; gap: 10px; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; }
     .tab-btn { padding: 10px 20px; font-size: 0.9rem; font-weight: 600; color: #64748b; background: none; border: none; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
     .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
 
-    /* Tables & Card Views */
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     
-    .table-responsive { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+    .table-responsive { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; max-height: 500px; }
     table { width: 100%; border-collapse: collapse; font-size: 0.88rem; white-space: nowrap; }
     th, td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; text-align: left; }
-    th { background: #1e293b; color: #ffffff; font-weight: 600; }
+    th { background: #1e293b; color: #ffffff; font-weight: 600; position: sticky; top: 0; z-index: 5; }
     tr:last-child td { border-bottom: none; }
     tr:nth-child(even) { background: #f8fafc; }
     
-    /* Highlight non-zero OT */
     .has-ot { background-color: #ecfdf5 !important; font-weight: 600; color: #059669; }
     .badge-ot { background: #10b981; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; }
   </style>
 </head>
 <body>
 
-  <!-- Search/Login Box -->
+  <!-- Search / Login Box -->
   <div class="portal-card" id="searchBox">
     <h2>Employee Portal</h2>
     <p>Apna data dekhne ke liye ID daalein</p>
@@ -71,22 +68,22 @@
       <input type="text" id="empIdInput" placeholder="e.g. 2333480" onkeypress="handleKey(event)" />
     </div>
 
-    <button class="btn-search" id="submitBtn" onclick="searchRecord()">View My Details</button>
-    <div class="msg-alert" id="errorNotice">Record nahi mila! Kripya sahi ID daalein.</div>
+    <button class="btn-search" id="submitBtn" onclick="searchRecord()">View Details</button>
+    <div class="msg-alert" id="errorNotice">Record nahi mila! Sahi ID daalein.</div>
   </div>
 
-  <!-- Dashboard Container -->
+  <!-- Dashboard View -->
   <div class="result-container" id="resultBox">
     <div class="res-header">
       <div>
         <h2 id="dispName">Welcome</h2>
         <span id="dispId" style="color: #94a3b8; font-size: 0.85rem;"></span>
       </div>
-      <button class="btn-back" onclick="goBack()">Logout / Search Again</button>
+      <button class="btn-back" onclick="goBack()">New Search</button>
     </div>
 
     <div class="res-body">
-      <!-- Quick Summary Cards -->
+      <!-- Summary Cards -->
       <div class="stats-grid">
         <div class="stat-box">
           <span>Total OverTime</span>
@@ -108,17 +105,17 @@
 
       <!-- Tab Buttons -->
       <div class="tab-nav">
-        <button class="tab-btn active" onclick="switchView('tab-ot', this)">OverTime Details (Date-Wise)</button>
-        <button class="tab-btn" onclick="switchView('tab-pay', this)">Payroll Output Summary</button>
+        <button class="tab-btn active" onclick="switchView('tab-ot', this)">OverTime (Date-Wise)</button>
+        <button class="tab-btn" onclick="switchView('tab-pay', this)">Payroll Summary</button>
       </div>
 
-      <!-- TAB 1: OverTime Date-Wise Table -->
+      <!-- TAB 1: OverTime Vertical Table -->
       <div class="tab-content active" id="tab-ot">
         <div class="table-responsive">
           <table>
             <thead>
               <tr>
-                <th style="width: 60px;">#</th>
+                <th style="width: 50px;">#</th>
                 <th>Date</th>
                 <th>OverTime Hours</th>
                 <th>Status</th>
@@ -129,7 +126,7 @@
         </div>
       </div>
 
-      <!-- TAB 2: Payroll Summary Table -->
+      <!-- TAB 2: Payroll Table -->
       <div class="tab-content" id="tab-pay">
         <div class="table-responsive">
           <table>
@@ -176,7 +173,7 @@
       }
 
       err.style.display = 'none';
-      btn.innerText = 'Fetching...';
+      btn.innerText = 'Searching...';
 
       try {
         const [otData, payData] = await Promise.all([
@@ -184,7 +181,7 @@
           fetchGViz(SHEET_PAY_ID, 'Sheet1')
         ]);
 
-        // 1. Find OT Row
+        // Find OT Row
         let otRow = null;
         otData.rows.forEach(r => {
           const c0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
@@ -194,7 +191,7 @@
           }
         });
 
-        // 2. Find Payroll Row
+        // Find Payroll Row
         let payRow = null;
         payData.rows.forEach(r => {
           const c0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
@@ -206,17 +203,17 @@
         if (!otRow && !payRow) {
           err.innerText = "Is ID ka koi record nahi mila!";
           err.style.display = 'block';
-          btn.innerText = 'View My Details';
+          btn.innerText = 'View Details';
           return;
         }
 
-        // Setup Header Info
+        // Title Info
         const name = (otRow && otRow.c[3] ? (otRow.c[3].f || otRow.c[3].v) : '') || 
                      (payRow && payRow.c[1] ? (payRow.c[1].f || payRow.c[1].v) : '') || 'Employee Details';
-        document.getElementById('dispName').innerText = `Welcome, ${name}`;
-        document.getElementById('dispId').innerText = `ID: ${queryId}`;
+        document.getElementById('dispName').innerText = `${name}`;
+        document.getElementById('dispId').innerText = `Searched ID: ${queryId}`;
 
-        // Build Date-wise OverTime Table (Cols 5 to second-to-last are dates)
+        // Build Date-wise OverTime Table
         const otDateBody = document.getElementById('otDateWiseBody');
         let otDateHtml = '';
         let totalOtCount = 0;
@@ -234,7 +231,7 @@
                 <td>${sNo++}</td>
                 <td><strong>${dateLabel}</strong></td>
                 <td>${cellVal ? `${cellVal} Hrs` : '-'}</td>
-                <td>${isOt ? '<span class="badge-ot">OT Added</span>' : '<span style="color:#94a3b8;">Normal</span>'}</td>
+                <td>${isOt ? '<span class="badge-ot">OT Added</span>' : '<span style="color:#94a3b8;">-</span>'}</td>
               </tr>
             `;
           }
@@ -276,17 +273,17 @@
           document.getElementById('cardBonus').innerText = '₹0';
         }
 
-        // Switch View
+        // Show Dashboard
         document.getElementById('searchBox').style.display = 'none';
         document.getElementById('resultBox').style.display = 'block';
         document.body.style.alignItems = 'flex-start';
 
       } catch (e) {
         console.error(e);
-        err.innerText = "Data load karne me problem aayi. Sheet check karein.";
+        err.innerText = "Data load karne me problem aayi. Sheet share permissions check karein.";
         err.style.display = 'block';
       }
-      btn.innerText = 'View My Details';
+      btn.innerText = 'View Details';
     }
 
     function goBack() {

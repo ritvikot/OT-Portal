@@ -7,37 +7,34 @@
     <style>
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f1f5f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 16px; }
-        .dashboard-container { background: #ffffff; width: 100%; max-width: 460px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
-        .header-banner { background: #1a73e8; color: white; text-align: center; padding: 22px 16px; }
+        .dashboard-container { background: #ffffff; width: 100%; max-width: 440px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .header-banner { background: #1a73e8; color: white; text-align: center; padding: 24px 16px; }
         .header-banner h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
         .header-banner p { font-size: 13px; opacity: 0.9; }
         .content-area { padding: 20px; }
         
-        /* Login */
+        /* Login System */
         .login-box { display: flex; flex-direction: column; gap: 12px; }
-        .login-box input { width: 100%; padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; }
+        .login-box input { width: 100%; padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; transition: 0.2s; }
         .login-box input:focus { border-color: #1a73e8; }
         .btn-primary { background: #1a73e8; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
         .btn-primary:hover { background: #1557b0; }
         
-        /* Profile Header */
+        /* Dashboard */
         .profile-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .profile-info h3 { font-size: 18px; color: #0f172a; display: flex; align-items: center; gap: 6px; }
-        .badge-gender { background: #e0e7ff; color: #3730a3; font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: bold; }
+        .profile-info h3 { font-size: 18px; color: #0f172a; }
         .profile-info p { font-size: 13px; color: #64748b; font-weight: 500; }
         .btn-logout { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
         
-        /* Tabs */
         .tab-nav { display: flex; border-bottom: 1.5px solid #e2e8f0; margin-bottom: 16px; }
         .tab-btn { flex: 1; padding: 10px; background: none; border: none; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; }
         .tab-btn.active { color: #1a73e8; border-bottom-color: #1a73e8; }
         
-        /* Grid Cards */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .card-stat { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; }
         .card-stat.full-width { grid-column: span 2; }
         .card-stat span { display: block; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
-        .card-stat p { font-size: 17px; font-weight: 700; color: #0f172a; }
+        .card-stat p { font-size: 18px; font-weight: 700; color: #0f172a; }
         .amount-pending { color: #dc2626 !important; }
         .amount-green { color: #16a34a !important; }
     </style>
@@ -51,9 +48,10 @@
     </div>
 
     <div class="content-area">
-        <!-- 1. LOGIN SCREEN -->
+        <!-- 1. LOGIN SCREEN WITH PASSWORD -->
         <div id="loginSection" class="login-box">
             <input type="text" id="associateIdInput" placeholder="Enter ASSOCIATE ID">
+            <input type="password" id="passwordInput" placeholder="Enter Password / DOB">
             <button class="btn-primary" onclick="handleLogin()">Login</button>
         </div>
 
@@ -61,7 +59,7 @@
         <div id="dashboardSection" style="display: none;">
             <div class="profile-row">
                 <div class="profile-info">
-                    <h3><span id="empName">---</span> <span id="empGender" class="badge-gender">---</span></h3>
+                    <h3 id="empName">---</h3>
                     <p>ID: <span id="empIdDisplay">---</span></p>
                 </div>
                 <button class="btn-logout" onclick="handleLogout()">Logout</button>
@@ -72,22 +70,21 @@
                 <button class="tab-btn active" id="payrollTabBtn" onclick="toggleTab('payroll')">Payroll & Allowances</button>
             </div>
 
-            <!-- Tab 1: Payroll (Sheet 2) -->
+            <!-- Tab 1: Payroll -->
             <div id="payrollTab">
                 <div class="grid-2">
-                    <div class="card-stat"><span>ATT. INCENTIVE</span><p id="attIncentive">₹0</p></div>
                     <div class="card-stat"><span>NIGHT SHIFT ALLOW.</span><p id="nightShift">₹0</p></div>
                     <div class="card-stat"><span>FOOD ALLOWANCE</span><p id="foodAllowance">₹0</p></div>
-                    <div class="card-stat"><span>B SHIFT INCENTIVE</span><p id="bShift">₹0</p></div>
                     <div class="card-stat"><span>ACTIVE BONUS</span><p id="activeBonus">₹0</p></div>
-                    <div class="card-stat"><span>15 AUG WORKING</span><p id="augWorking">₹0</p></div>
+                    <div class="card-stat"><span>B SHIFT INCENTIVE</span><p id="bShift">₹0</p></div>
+                    <div class="card-stat"><span>ATT. INCENTIVE</span><p id="attIncentive">₹0</p></div>
                     <div class="card-stat"><span>LOPR DAYS</span><p id="loprDays">0</p></div>
                     <div class="card-stat"><span>UNNATI SCHEME</span><p id="unnatiScheme" class="amount-green">₹0</p></div>
-                    <div class="card-stat full-width"><span>PENDING AMOUNT</span><p id="pendingAmount" class="amount-pending">₹0</p></div>
+                    <div class="card-stat"><span>PENDING AMOUNT</span><p id="pendingAmount" class="amount-pending">₹0</p></div>
                 </div>
             </div>
 
-            <!-- Tab 2: OverTime (Sheet 1) -->
+            <!-- Tab 2: OverTime -->
             <div id="otTab" style="display: none;">
                 <div class="grid-2">
                     <div class="card-stat full-width"><span>TOTAL OT HOURS</span><p id="otHours">0</p></div>
@@ -114,6 +111,8 @@
 
     async function handleLogin() {
         const inputId = document.getElementById('associateIdInput').value.trim();
+        const inputPass = document.getElementById('passwordInput').value.trim();
+
         if (!inputId) {
             alert("कृपया ASSOCIATE ID दर्ज करें!");
             return;
@@ -125,33 +124,39 @@
                 fetchRows(URL_PAYROLL)
             ]);
 
-            // Match ASSOCIATE ID (Column A = Index 0)
+            // Sheet 2: ASSOCIATE ID (Column A = Index 0)
             const payrollRow = payrollRows.find(r => r[0] === inputId);
             const otRow = otRows.find(r => r[0] === inputId);
 
             if (!payrollRow && !otRow) {
-                alert(`ASSOCIATE ID: ${inputId} नहीं मिली!`);
+                alert(`ASSOCIATE ID: ${inputId} का डेटा नहीं मिला!`);
+                return;
+            }
+
+            // Password Verification Check (agar sheet me DOB ya Password hai)
+            const userRow = payrollRow || otRow;
+            const sheetPass = userRow[13] || userRow[14] || ''; // Password column
+            if (sheetPass && inputPass && sheetPass !== inputPass) {
+                alert("गलत पासवर्ड!");
                 return;
             }
 
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
 
-            // --- SHEET ROW 1 EXACT INDEX MAPPING ---
+            // --- SHEET 2 EXACT COLUMN MAPPING ---
             if (payrollRow) {
                 document.getElementById('empName').innerText = payrollRow[1] || 'Associate';          // Col B: FIRST NAME
-                document.getElementById('empGender').innerText = payrollRow[2] || '';                // Col C: GENDER
                 document.getElementById('empIdDisplay').innerText = inputId;                          // Col A: ASSOCIATE ID
                 
-                document.getElementById('attIncentive').innerText = '₹' + (payrollRow[3] || '0');      // Col D: ATTENDANCE Incentive
-                document.getElementById('nightShift').innerText = '₹' + (payrollRow[4] || '0');        // Col E: NIGHT SHIFT ALLOWANCE
-                document.getElementById('foodAllowance').innerText = '₹' + (payrollRow[5] || '0');     // Col F: FOOD ALLOWANCE
-                document.getElementById('bShift').innerText = '₹' + (payrollRow[6] || '0');            // Col G: B Shift Incentive
-                document.getElementById('activeBonus').innerText = '₹' + (payrollRow[7] || '0');       // Col H: Active Bonus
-                document.getElementById('augWorking').innerText = '₹' + (payrollRow[8] || '0');        // Col I: day working 15 Au
-                document.getElementById('unnatiScheme').innerText = '₹' + (payrollRow[10] || '0');     // Col K: Unnati Scheme
-                document.getElementById('loprDays').innerText = payrollRow[11] || '0';                 // Col L: LOPR Day's
-                document.getElementById('pendingAmount').innerText = '₹' + (payrollRow[12] || '0');    // Col M: Pending Amount
+                document.getElementById('attIncentive').innerText = '₹' + (payrollRow[3] || '0');      // Col D: FEMALE ATTENDANCE Incentive (₹1000)
+                document.getElementById('nightShift').innerText = '₹' + (payrollRow[4] || '0');        // Col E: NIGHT SHIFT ALLOWANCE (₹0)
+                document.getElementById('foodAllowance').innerText = '₹' + (payrollRow[5] || '0');     // Col F: FOOD ALLOWANCE (₹1182)
+                document.getElementById('bShift').innerText = '₹' + (payrollRow[6] || '0');            // Col G: B Shift Incentive (₹0)
+                document.getElementById('activeBonus').innerText = '₹' + (payrollRow[7] || '0');       // Col H: Active Bonus (₹1560)
+                document.getElementById('unnatiScheme').innerText = '₹' + (payrollRow[10] || '0');     // Col K: Unnati Scheme (₹500)
+                document.getElementById('loprDays').innerText = payrollRow[11] || '0';                 // Col L: LOPR Day's (0)
+                document.getElementById('pendingAmount').innerText = '₹' + (payrollRow[12] || '0');    // Col M: Pending Amount (₹0)
             }
 
             if (otRow) {
@@ -174,6 +179,7 @@
 
     function handleLogout() {
         document.getElementById('associateIdInput').value = '';
+        document.getElementById('passwordInput').value = '';
         document.getElementById('dashboardSection').style.display = 'none';
         document.getElementById('loginSection').style.display = 'flex';
     }

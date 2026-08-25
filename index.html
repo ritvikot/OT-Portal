@@ -45,14 +45,13 @@
     </div>
 
     <div class="content-area">
-        <!-- Login Section -->
+        <!-- 1. LOGIN SCREEN -->
         <div id="loginSection" class="login-box">
             <input type="text" id="associateIdInput" placeholder="Enter ASSOCIATE ID">
-            <input type="password" id="passwordInput" placeholder="Enter Password (Optional)">
             <button class="btn-primary" onclick="handleLogin()">Login</button>
         </div>
 
-        <!-- Dashboard Section -->
+        <!-- 2. DASHBOARD SCREEN -->
         <div id="dashboardSection" style="display: none;">
             <div class="profile-row">
                 <div class="profile-info">
@@ -120,7 +119,7 @@
 
             // Sheet 2 me ASSOCIATE ID (Column A = Index 0)
             const payrollRow = payrollRows.find(r => r[0] === inputId);
-            // Sheet 1 (OT) me ASSOCIATE ID
+            // Sheet 1 (OT) me ASSOCIATE ID (Column A = Index 0)
             const otRow = otRows.find(r => r[0] === inputId);
 
             if (!payrollRow && !otRow) {
@@ -131,21 +130,21 @@
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
 
-            // --- EXACT COLUMN MAPPING ACCORDING TO YOUR SHEET ---
+            // --- EXACT ROW 1 COLUMN MAPPING ---
             if (payrollRow) {
                 document.getElementById('empName').innerText = payrollRow[1] || 'Associate';          // Col B (FIRST NAME)
                 document.getElementById('empIdDisplay').innerText = inputId;                          // Col A (ASSOCIATE ID)
                 
-                document.getElementById('nightShift').innerText = '₹' + (payrollRow[4] || '0');        // Col E (NIGHT SHIFT ALLOWANCE)
-                document.getElementById('foodAllowance').innerText = '₹' + (payrollRow[5] || '0');     // Col F (FOOD ALLOWANCE)
-                document.getElementById('activeBonus').innerText = '₹' + (payrollRow[7] || '0');       // Col H (Active Bonus)
-                document.getElementById('bShift').innerText = '₹' + (payrollRow[6] || '0');            // Col G (B Shift Incentive)
-                document.getElementById('attIncentive').innerText = '₹' + (payrollRow[3] || '0');      // Col D (ATTENDANCE Incentive)
-                document.getElementById('loprDays').innerText = payrollRow[11] || '0';                 // Col L (LOPR Day's)
+                document.getElementById('nightShift').innerText = '₹' + (payrollRow[4] || '0');        // Col E (NIGHT SHIFT ALLOWANCE) -> 0
+                document.getElementById('foodAllowance').innerText = '₹' + (payrollRow[5] || '0');     // Col F (FOOD ALLOWANCE) -> 1182
+                document.getElementById('activeBonus').innerText = '₹' + (payrollRow[7] || '0');       // Col H (Active Bonus) -> 1560
+                document.getElementById('bShift').innerText = '₹' + (payrollRow[6] || '0');            // Col G (B Shift Incentive) -> 0
+                document.getElementById('attIncentive').innerText = '₹' + (payrollRow[3] || '0');      // Col D (FEMALE ATTENDANCE Incentive) -> 1000
+                document.getElementById('loprDays').innerText = payrollRow[11] || '0';                 // Col L (LOPR Day's) -> 0
                 
-                // Pending Amount Col M (12) ya Unnati Scheme Col K (10)
-                const pending = payrollRow[12] !== '' ? payrollRow[12] : (payrollRow[10] || '0');
-                document.getElementById('pendingAmount').innerText = '₹' + pending;
+                // Col K (Unnati Scheme me 500 hai) ya Col M (Pending Amount)
+                const pending = (payrollRow[10] && payrollRow[10] !== '0') ? payrollRow[10] : (payrollRow[12] || '0');
+                document.getElementById('pendingAmount').innerText = '₹' + pending;                    // -> 500
             }
 
             if (otRow) {
@@ -168,8 +167,6 @@
 
     function handleLogout() {
         document.getElementById('associateIdInput').value = '';
-        const pass = document.getElementById('passwordInput');
-        if (pass) pass.value = '';
         document.getElementById('dashboardSection').style.display = 'none';
         document.getElementById('loginSection').style.display = 'flex';
     }

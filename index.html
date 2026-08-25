@@ -3,155 +3,255 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Employee Management Portal</title>
+  <title>Employee Portal</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; }
-    body { background-color: #f1f5f9; color: #1e293b; padding: 24px 16px; }
-    .container { max-width: 1300px; margin: 0 auto; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+    body { background: #f1f5f9; color: #1e293b; min-height: 100vh; display: flex; flex-direction: column; }
     
-    .header { background: #0f172a; color: #fff; padding: 20px 24px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-    .header h1 { font-size: 1.25rem; font-weight: 600; }
-    .status-badge { background: #10b981; color: #fff; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 500; }
+    /* Login Box */
+    .login-container { max-width: 380px; margin: auto; padding: 30px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); width: 90%; }
+    .login-container h2 { font-size: 1.4rem; margin-bottom: 8px; color: #0f172a; text-align: center; }
+    .login-container p { font-size: 0.85rem; color: #64748b; margin-bottom: 20px; text-align: center; }
+    .input-group { margin-bottom: 16px; }
+    .input-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; }
+    .input-group input { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; outline: none; }
+    .input-group input:focus { border-color: #2563eb; }
+    .btn-login { width: 100%; padding: 10px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
+    .btn-login:hover { background: #1d4ed8; }
+    .error-msg { color: #ef4444; font-size: 0.8rem; margin-top: 10px; text-align: center; display: none; }
 
-    .controls-panel { background: #ffffff; padding: 16px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
-    .tabs { display: flex; gap: 8px; }
-    .tab-btn { padding: 8px 16px; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 600; color: #475569; transition: all 0.2s; }
-    .tab-btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+    /* Dashboard */
+    .dashboard { display: none; max-width: 1200px; margin: 20px auto; width: 95%; }
+    .dash-header { background: #0f172a; color: #fff; padding: 16px 24px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
+    .btn-logout { background: #ef4444; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; }
     
-    .search-box { flex: 1; max-width: 350px; position: relative; }
-    .search-box input { width: 100%; padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.875rem; outline: none; }
-    .search-box input:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
+    .dash-body { background: #fff; padding: 24px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+    .stat-card span { font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; }
+    .stat-card h3 { font-size: 1.4rem; color: #0f172a; margin-top: 6px; }
 
-    .table-card { background: #ffffff; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07); overflow: hidden; }
-    .stats-bar { padding: 10px 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-size: 0.8rem; color: #64748b; }
-    .table-wrapper { overflow-x: auto; max-height: 650px; }
-    
-    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; white-space: nowrap; }
-    th { background: #1e293b; color: #f8fafc; font-weight: 600; padding: 12px 14px; position: sticky; top: 0; z-index: 10; }
-    td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; color: #334155; }
-    tr:hover td { background-color: #f8fafc; }
-    tr:nth-child(even) td { background-color: #fafafa; }
-
-    .loader { padding: 40px; text-align: center; color: #64748b; font-size: 0.95rem; }
+    .section-title { font-size: 1.05rem; font-weight: 600; margin: 20px 0 10px 0; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; }
+    .table-wrapper { overflow-x: auto; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
+    th, td { padding: 10px 14px; border: 1px solid #e2e8f0; text-align: left; }
+    th { background: #1e293b; color: #fff; }
+    tr:nth-child(even) { background: #f8fafc; }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="header">
-    <h1>Live Workforce Portal</h1>
-    <span class="status-badge">● Live Synced</span>
+  <!-- Login Section -->
+  <div class="login-container" id="loginBox">
+    <h2>Employee Login</h2>
+    <p>Apna User ID aur Password enter karein</p>
+    <div class="input-group">
+      <label>User ID (Casper ID)</label>
+      <input type="text" id="userIdInput" placeholder="Enter ID" />
+    </div>
+    <div class="input-group">
+      <label>Password</label>
+      <input type="password" id="passInput" placeholder="Enter Password" />
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="handleLogin()">Login</button>
+    <div class="error-msg" id="errorMsg">Invalid ID or Password!</div>
   </div>
 
-  <div class="controls-panel">
-    <div class="tabs">
-      <button class="tab-btn active" id="btn-sheet1" onclick="switchSource('sheet1')">OverTime (MH)</button>
-      <button class="tab-btn" id="btn-sheet2" onclick="switchSource('sheet2')">Payroll Output</button>
+  <!-- Dashboard Section -->
+  <div class="dashboard" id="dashBox">
+    <div class="dash-header">
+      <div>
+        <h2 id="empNameDisplay">Welcome</h2>
+        <small id="empIdDisplay" style="color:#94a3b8;"></small>
+      </div>
+      <button class="btn-logout" onclick="handleLogout()">Logout</button>
     </div>
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Search Emp ID, Name, Department..." onkeyup="filterTable()" />
+
+    <div class="dash-body">
+      <!-- Quick Summary Cards -->
+      <div class="summary-grid">
+        <div class="stat-card">
+          <span>Total OverTime</span>
+          <h3 id="statTotalOt">0 Hrs</h3>
+        </div>
+        <div class="stat-card">
+          <span>Food Allowance</span>
+          <h3 id="statFood">₹0</h3>
+        </div>
+        <div class="stat-card">
+          <span>Night Shift Allowance</span>
+          <h3 id="statNight">₹0</h3>
+        </div>
+        <div class="stat-card">
+          <span>Active Bonus</span>
+          <h3 id="statBonus">₹0</h3>
+        </div>
+      </div>
+
+      <!-- OverTime Records -->
+      <div class="section-title">OverTime Details (MH)</div>
+      <div class="table-wrapper">
+        <table id="otTable">
+          <thead id="otHead"></thead>
+          <tbody id="otBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Payroll Records -->
+      <div class="section-title">Payroll Output</div>
+      <div class="table-wrapper">
+        <table id="payrollTable">
+          <thead id="payrollHead"></thead>
+          <tbody id="payrollBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <div class="table-card">
-    <div class="stats-bar" id="recordCount">Loading records...</div>
-    <div class="table-wrapper">
-      <div id="loader" class="loader">Fetching data from Google Sheets...</div>
-      <table id="dataTable" style="display:none;">
-        <thead id="tableHead"></thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
+  <script>
+    const SHEET1_ID = '1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0';
+    const SHEET2_ID = '1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0';
 
-<script>
-  const SOURCES = {
-    sheet1: {
-      id: '1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0',
-      tab: 'Data',
-      title: 'OverTime MH'
-    },
-    sheet2: {
-      id: '1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0',
-      tab: 'Sheet1',
-      title: 'Payroll Output'
+    async function fetchGViz(sheetId, tabName) {
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
+      const res = await fetch(url);
+      const text = await res.text();
+      const json = JSON.parse(text.substring(47).slice(0, -2));
+      return { cols: json.table.cols, rows: json.table.rows };
     }
-  };
 
-  let currentSource = 'sheet1';
+    async function handleLogin() {
+      const uId = document.getElementById('userIdInput').value.trim();
+      const uPass = document.getElementById('passInput').value.trim();
+      const err = document.getElementById('errorMsg');
+      const btn = document.getElementById('loginBtn');
 
-  function loadSheetData(sourceKey) {
-    const loader = document.getElementById('loader');
-    const table = document.getElementById('dataTable');
-    loader.style.display = 'block';
-    table.style.display = 'none';
-    loader.innerText = 'Fetching live data...';
+      if (!uId || !uPass) {
+        err.innerText = "Dono fields fill karein.";
+        err.style.display = "block";
+        return;
+      }
 
-    const cfg = SOURCES[sourceKey];
-    const url = `https://docs.google.com/spreadsheets/d/${cfg.id}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(cfg.tab)}`;
+      btn.innerText = "Verifying...";
+      err.style.display = "none";
 
-    fetch(url)
-      .then(res => res.text())
-      .then(raw => {
-        const json = JSON.parse(raw.substring(47).slice(0, -2));
-        const cols = json.table.cols;
-        const rows = json.table.rows;
+      try {
+        // Step 1: Verify from Users tab
+        const usersData = await fetchGViz(SHEET1_ID, 'Users');
+        let matchedUser = null;
 
-        const thead = document.getElementById('tableHead');
-        let headHtml = '<tr>';
-        cols.forEach((col, idx) => {
-          headHtml += `<th>${col.label || ('Col ' + (idx + 1))}</th>`;
+        usersData.rows.forEach(r => {
+          const idVal = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
+          const passVal = String(r.c[1] ? (r.c[1].f || r.c[1].v || '') : '').trim();
+          const nameVal = r.c[2] ? (r.c[2].f || r.c[2].v || '') : '';
+
+          if (idVal.toLowerCase() === uId.toLowerCase() && passVal === uPass) {
+            matchedUser = { id: idVal, name: nameVal };
+          }
         });
-        headHtml += '</tr>';
-        thead.innerHTML = headHtml;
 
-        const tbody = document.getElementById('tableBody');
-        let bodyHtml = '';
-        rows.forEach(row => {
-          bodyHtml += '<tr>';
-          cols.forEach((_, cIdx) => {
-            const cell = row.c ? row.c[cIdx] : null;
-            const val = cell ? (cell.f !== undefined ? cell.f : (cell.v !== null ? cell.v : '')) : '';
-            bodyHtml += `<td>${val}</td>`;
-          });
-          bodyHtml += '</tr>';
-        });
-        tbody.innerHTML = bodyHtml;
+        if (!matchedUser) {
+          err.innerText = "Galat User ID ya Password!";
+          err.style.display = "block";
+          btn.innerText = "Login";
+          return;
+        }
 
-        loader.style.display = 'none';
-        table.style.display = 'table';
-        document.getElementById('recordCount').innerText = `Total Records: ${rows.length}`;
-        filterTable();
-      })
-      .catch(err => {
-        loader.innerText = 'Error loading data. Google Sheet Share settings check karein.';
-        console.error(err);
+        // Step 2: Fetch Data for this specific user
+        await loadUserData(matchedUser);
+
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('dashBox').style.display = 'block';
+      } catch (e) {
+        console.error(e);
+        err.innerText = "Data load karne me problem aayi. Sheet settings check karein.";
+        err.style.display = "block";
+      }
+      btn.innerText = "Login";
+    }
+
+    async function loadUserData(user) {
+      document.getElementById('empNameDisplay').innerText = user.name || 'Employee';
+      document.getElementById('empIdDisplay').innerText = `User ID: ${user.id}`;
+
+      // 1. Fetch OverTime Sheet Data
+      const otData = await fetchGViz(SHEET1_ID, 'Data');
+      const otHead = document.getElementById('otHead');
+      const otBody = document.getElementById('otBody');
+
+      let otHeadRow = '<tr>';
+      otData.cols.forEach(c => { otHeadRow += `<th>${c.label || ''}</th>`; });
+      otHeadRow += '</tr>';
+      otHead.innerHTML = otHeadRow;
+
+      let userOtRow = null;
+      otData.rows.forEach(r => {
+        const rowId = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
+        if (rowId.toLowerCase() === user.id.toLowerCase()) {
+          userOtRow = r;
+        }
       });
-  }
 
-  function switchSource(sourceKey) {
-    currentSource = sourceKey;
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById(`btn-${sourceKey}`).classList.add('active');
-    loadSheetData(sourceKey);
-  }
+      if (userOtRow) {
+        let bodyHtml = '<tr>';
+        otData.cols.forEach((_, idx) => {
+          const cell = userOtRow.c[idx];
+          const val = cell ? (cell.f !== undefined ? cell.f : (cell.v !== null ? cell.v : '')) : '';
+          bodyHtml += `<td>${val}</td>`;
+        });
+        bodyHtml += '</tr>';
+        otBody.innerHTML = bodyHtml;
 
-  function filterTable() {
-    const term = document.getElementById('searchInput').value.toLowerCase();
-    const rows = document.querySelectorAll('#tableBody tr');
-    let visibleCount = 0;
+        // Last column as Total OT
+        const lastCell = userOtRow.c[userOtRow.c.length - 1];
+        document.getElementById('statTotalOt').innerText = `${lastCell ? (lastCell.f || lastCell.v || 0) : 0} Hrs`;
+      } else {
+        otBody.innerHTML = '<tr><td colspan="100%" style="text-align:center;">No OverTime record found.</td></tr>';
+      }
 
-    rows.forEach(row => {
-      const match = row.innerText.toLowerCase().includes(term);
-      row.style.display = match ? '' : 'none';
-      if (match) visibleCount++;
-    });
+      // 2. Fetch Payroll Sheet Data
+      const payData = await fetchGViz(SHEET2_ID, 'Sheet1');
+      const payrollHead = document.getElementById('payrollHead');
+      const payrollBody = document.getElementById('payrollBody');
 
-    document.getElementById('recordCount').innerText = `Showing ${visibleCount} of ${rows.length} records`;
-  }
+      let payHeadRow = '<tr>';
+      payData.cols.forEach(c => { payHeadRow += `<th>${c.label || ''}</th>`; });
+      payHeadRow += '</tr>';
+      payrollHead.innerHTML = payHeadRow;
 
-  loadSheetData('sheet1');
-</script>
+      let userPayRow = null;
+      payData.rows.forEach(r => {
+        const rowId = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
+        if (rowId.toLowerCase() === user.id.toLowerCase()) {
+          userPayRow = r;
+        }
+      });
+
+      if (userPayRow) {
+        let bodyHtml = '<tr>';
+        payData.cols.forEach((_, idx) => {
+          const cell = userPayRow.c[idx];
+          const val = cell ? (cell.f !== undefined ? cell.f : (cell.v !== null ? cell.v : '')) : '';
+          bodyHtml += `<td>${val}</td>`;
+        });
+        bodyHtml += '</tr>';
+        payrollBody.innerHTML = bodyHtml;
+
+        // Match indexes based on Payroll sheet headers
+        document.getElementById('statNight').innerText = `₹${userPayRow.c[4] ? (userPayRow.c[4].v || 0) : 0}`;
+        document.getElementById('statFood').innerText = `₹${userPayRow.c[5] ? (userPayRow.c[5].v || 0) : 0}`;
+        document.getElementById('statBonus').innerText = `₹${userPayRow.c[7] ? (userPayRow.c[7].v || 0) : 0}`;
+      } else {
+        payrollBody.innerHTML = '<tr><td colspan="100%" style="text-align:center;">No Payroll record found.</td></tr>';
+      }
+    }
+
+    function handleLogout() {
+      document.getElementById('userIdInput').value = '';
+      document.getElementById('passInput').value = '';
+      document.getElementById('dashBox').style.display = 'none';
+      document.getElementById('loginBox').style.display = 'block';
+    }
+  </script>
 </body>
 </html>

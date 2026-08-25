@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OverTime & Payroll Portal</title>
+    <!-- Live CSV Parsing Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #f1f5f9; padding: 20px 12px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
@@ -20,9 +22,9 @@
         .btn-search { background: #1a73e8; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
         .btn-search:hover { background: #1557b0; }
         
-        /* Result Item */
+        /* Result */
         .msg-text { text-align: center; color: #64748b; font-size: 14px; padding: 30px 10px; }
-        .emp-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .emp-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
         .profile-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
         .profile-bar h3 { font-size: 18px; color: #0f172a; text-transform: capitalize; }
         .profile-bar p { font-size: 13px; color: #64748b; font-weight: 500; margin-top: 2px; }
@@ -43,7 +45,7 @@
 <div class="dashboard-card">
     <div class="header-banner">
         <h2>OverTime & Payroll Portal</h2>
-        <p>Employee OT Search</p>
+        <p>Live Employee OT Search</p>
     </div>
 
     <div class="content-area">
@@ -59,111 +61,14 @@
 </div>
 
 <script>
-    const DATES = [
-        "21-August-26", "22-August-26", "23-August-26", "24-August-26", "25-August-26",
-        "26-August-26", "27-August-26", "28-August-26", "29-August-26", "30-August-26", "31-August-26",
-        "1-September-26", "2-September-26", "3-September-26", "4-September-26", "5-September-26",
-        "6-September-26", "7-September-26", "8-September-26", "9-September-26", "10-September-26",
-        "11-September-26", "12-September-26", "13-September-26", "14-September-26", "15-September-26",
-        "16-September-26", "17-September-26", "18-September-26", "19-September-26", "20-September-26"
-    ];
-
-    const DB = {
-        "2333480": { name: "Bobby", empId: "A21648", dept: "MH", ot: { "22-August-26": 2 } },
-        "2328716": { name: "manju gahalot", empId: "th162372", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 2 } },
-        "2341090": { name: "KARAN", empId: "TH165982", dept: "MH", ot: { "22-August-26": 2 } },
-        "2333441": { name: "SATPAL", empId: "IB30238", dept: "MH", ot: { "23-August-26": 2, "24-August-26": 3 } },
-        "2333531": { name: "Avinash Bharti", empId: "IB30427", dept: "MH", ot: { "21-August-26": 1 } },
-        "2333530": { name: "SURAJ", empId: "ib23130", dept: "MH", ot: { "23-August-26": 2, "24-August-26": 3 } },
-        "2333220": { name: "ROHINI", empId: "ib30315", dept: "MH", ot: { "22-August-26": 2 } },
-        "2446736": { name: "MAMTA DEVI", empId: "IB36076", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 3 } },
-        "2466680": { name: "Suraj Singh", empId: "TH287911", dept: "MH", ot: { "22-August-26": 2, "23-August-26": 2 } },
-        "2588551": { name: "HARISHCHANDRA", empId: "ARS156600", dept: "MH", ot: { "21-August-26": 1 } },
-        "3122873": { name: "Manisha", empId: "THRS11055", dept: "MH", ot: { "21-August-26": 2 } },
-        "2766993": { name: "SURENDRA SINGH", empId: "IB44257", dept: "MH", ot: { "21-August-26": 1 } },
-        "2905938": { name: "PINTU", empId: "IB44754", dept: "MH", ot: { "22-August-26": 2 } },
-        "3092845": { name: "Rajni", empId: "RFBNM1282", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2 } },
-        "3106233": { name: "RAJEEV KUMAR", empId: "A47290", dept: "MH", ot: { "22-August-26": 1 } },
-        "3185075": { name: "Vinod Kumar", empId: "THRS26262", dept: "MH", ot: { "22-August-26": 1 } },
-        "3227989": { name: "Km Kalpana Kumari", empId: "IB50388", dept: "MH", ot: { "22-August-26": 2, "24-August-26": 2 } },
-        "3254016": { name: "Mahendra Bairwa", empId: "A47703", dept: "MH", ot: { "22-August-26": 1.5, "23-August-26": 1.5, "24-August-26": 1.5 } },
-        "3254066": { name: "Saurav Bairwa", empId: "A47705", dept: "MH", ot: { "24-August-26": 1.5 } },
-        "3284683": { name: "Pampa Roy Ghosh", empId: "IB50752", dept: "MH", ot: { "22-August-26": 2 } },
-        "3337837": { name: "Meena Kumari", empId: "IB53037", dept: "MH", ot: { "24-August-26": 3 } },
-        "3400019": { name: "Asha", empId: "TP25506", dept: "MH", ot: { "24-August-26": 2 } },
-        "3399897": { name: "Arti", empId: "TP25505", dept: "MH", ot: { "24-August-26": 2 } },
-        "3407050": { name: "Neelam", empId: "A49287", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 2 } },
-        "3449168": { name: "Asheesh Kumar", empId: "A49398", dept: "MH", ot: { "22-August-26": 1 } },
-        "3493171": { name: "Lokendra Singh Thakur", empId: "IB53752", dept: "MH", ot: { "22-August-26": 1.5 } },
-        "3497561": { name: "Shivam", empId: "A49531", dept: "MH", ot: { "22-August-26": 2 } },
-        "3519881": { name: "Ravi Bairwa", empId: "IB53855", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5, "23-August-26": 1.5, "24-August-26": 2 } },
-        "3524721": { name: "Sushma", empId: "IB53892", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2 } },
-        "3530200": { name: "Pavan Kumar Ray", empId: "A49641", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5, "24-August-26": 2.5 } },
-        "3532783": { name: "Khushbu", empId: "THRS100810", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 2 } },
-        "3541715": { name: "Mohan Jee Choubey", empId: "A49710", dept: "MH", ot: { "22-August-26": 2 } },
-        "3546870": { name: "Dinesh Kumar", empId: "THRS103855", dept: "MH", ot: { "21-August-26": 1.5 } },
-        "3603907": { name: "Shivam kumar", empId: "A49874", dept: "MH", ot: { "21-August-26": 1 } },
-        "3621327": { name: "Aradhana Singh", empId: "IB55325", dept: "MH", ot: { "22-August-26": 2, "24-August-26": 3 } },
-        "3624627": { name: "Ravindra Varma", empId: "A49951", dept: "MH", ot: { "21-August-26": 1 } },
-        "3680728": { name: "Reshma", empId: "ARS266097", dept: "MH", ot: { "22-August-26": 2 } },
-        "3689085": { name: "Pratishtha Nayan", empId: "ARS266101", dept: "MH", ot: { "22-August-26": 2 } },
-        "3826982": { name: "Matwar Singh", empId: "IB55852", dept: "MH", ot: { "24-August-26": 1 } },
-        "3854063": { name: "Hemant Kumar", empId: "A53534", dept: "MH", ot: { "23-August-26": 1 } },
-        "3855044": { name: "Radhamani", empId: "KV129873", dept: "MH", ot: { "22-August-26": 2 } },
-        "3857326": { name: "Guddu", empId: "IB58119", dept: "MH", ot: { "22-August-26": 1.5 } },
-        "3880061": { name: "Arun", empId: "A53721", dept: "MH", ot: { "23-August-26": 2, "24-August-26": 3 } },
-        "3921022": { name: "Surendra", empId: "A53814", dept: "MH", ot: { "23-August-26": 1.5, "24-August-26": 1.5 } },
-        "3927211": { name: "Keshavram", empId: "IB58415", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5, "23-August-26": 1.5, "24-August-26": 2.5 } },
-        "3927192": { name: "Jitendra Shivhare", empId: "IB58402", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 2, "24-August-26": 3 } },
-        "3931113": { name: "Shrinivas Rajbhar", empId: "A98708", dept: "MH", ot: { "24-August-26": 1 } },
-        "3946913": { name: "Deepak Kumar", empId: "A99692", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5, "24-August-26": 2.5 } },
-        "3951303": { name: "Rajeev Kumar", empId: "A53928", dept: "MH", ot: { "21-August-26": 1 } },
-        "3959782": { name: "Abhishek Bairwa", empId: "A53973", dept: "MH", ot: { "21-August-26": 1.5 } },
-        "3970766": { name: "Himmat", empId: "A56012", dept: "MH", ot: { "23-August-26": 1.5, "24-August-26": 1.5 } },
-        "3971714": { name: "Shiv Kumar", empId: "A56014", dept: "MH", ot: { "22-August-26": 2 } },
-        "3974991": { name: "PRIYANKA", empId: "THRS188870", dept: "MH", ot: { "21-August-26": 2, "24-August-26": 3 } },
-        "3978447": { name: "Anjali Devi", empId: "IB58675", dept: "MH", ot: { "22-August-26": 2, "24-August-26": 2 } },
-        "3986281": { name: "Sunil Kumar", empId: "KV143865", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5, "23-August-26": 1.5, "24-August-26": 2.5 } },
-        "3994784": { name: "REETA DEVI", empId: "IB58718", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 3 } },
-        "3999656": { name: "Pooja", empId: "RFBNM1991", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2 } },
-        "4030312": { name: "Priyanshu Devi", empId: "RFBNM2017", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2 } },
-        "4033086": { name: "Preeti", empId: "A56164", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 3 } },
-        "4032151": { name: "Nikhil Kumar", empId: "A56152", dept: "MH", ot: { "24-August-26": 3 } },
-        "4034613": { name: "Nandani", empId: "MYNT35381", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2 } },
-        "4037811": { name: "Shivkumari Gond", empId: "1880306", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2 } },
-        "4035370": { name: "Shiwani", empId: "MYNT35380", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2 } },
-        "4058967": { name: "Pankaj Pal", empId: "A56234", dept: "MH", ot: { "22-August-26": 2 } },
-        "4065177": { name: "Surender", empId: "A56251", dept: "MH", ot: { "24-August-26": 2.5 } },
-        "4071203": { name: "Salman Khan", empId: "A56273", dept: "MH", ot: { "22-August-26": 1 } },
-        "4073135": { name: "Balram Bairwa", empId: "IB61043", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5, "23-August-26": 1.5 } },
-        "4090897": { name: "Subhash Bairwa", empId: "4097864", dept: "MH", ot: { "21-August-26": 1.5, "24-August-26": 1.5 } },
-        "4103927": { name: "Suman", empId: "IB61142", dept: "MH", ot: { "22-August-26": 2 } },
-        "4103785": { name: "Mansingh Bairwa", empId: "A56364", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5, "23-August-26": 1.5, "24-August-26": 1.5 } },
-        "4108488": { name: "Desh Pal", empId: "PMTR33450", dept: "MH", ot: { "22-August-26": 2 } },
-        "4106832": { name: "Sunil Kumar", empId: "GS20413919", dept: "MH", ot: { "21-August-26": 1.5 } },
-        "4109615": { name: "Khushubu", empId: "A56373", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 2 } },
-        "4117194": { name: "Bahvishya", empId: "ARS296332", dept: "MH", ot: { "22-August-26": 1 } },
-        "4125054": { name: "Roshni", empId: "UISFLK03523", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 2 } },
-        "4133871": { name: "Anjali Singh", empId: "A56503", dept: "MH", ot: { "22-August-26": 2, "24-August-26": 2 } },
-        "4133874": { name: "Rajneesh Bairwa", empId: "A56507", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 2, "24-August-26": 1.5 } },
-        "4138918": { name: "Rangeeta Varma", empId: "A56529", dept: "MH", ot: { "21-August-26": 2 } },
-        "4146369": { name: "Shivani", empId: "TP73805", dept: "MH", ot: { "22-August-26": 2 } },
-        "4228143": { name: "Amit Kumar", empId: "A56643", dept: "MH", ot: { "22-August-26": 2 } },
-        "4234251": { name: "Umesh Vishaw Karma", empId: "A56628", dept: "MH", ot: { "22-August-26": 1 } },
-        "4237330": { name: "Karan Sharma", empId: "A072693028", dept: "MH", ot: { "22-August-26": 2 } },
-        "4237242": { name: "Kishan Kumar", empId: "A0726257653", dept: "MH", ot: { "22-August-26": 2 } },
-        "4244674": { name: "Manish Kumar", empId: "A0726294380", dept: "MH", ot: { "21-August-26": 2 } },
-        "4244679": { name: "Manoj Kumar Bairwa", empId: "A0726294558", dept: "MH", ot: { "21-August-26": 2, "23-August-26": 1.5, "24-August-26": 1.5 } },
-        "4248996": { name: "Dilkhush Bairwa", empId: "4173525", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5 } },
-        "4248993": { name: "Deepak Kumar Gond", empId: "A0726256624", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 1.5 } },
-        "4273260": { name: "Pujan Chetry", empId: "A118467", dept: "MH", ot: { "22-August-26": 1 } }
-    };
+    // Live Sheet URL (CSV Format)
+    const OT_SHEET_CSV = "https://docs.google.com/spreadsheets/d/1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0/gviz/tq?tqx=out:csv&gid=552193494";
 
     function handleKey(e) {
         if (e.key === 'Enter') doSearch();
     }
 
-    function doSearch() {
+    async function doSearch() {
         const q = document.getElementById('searchInput').value.trim().toLowerCase();
         const container = document.getElementById('resultsContainer');
 
@@ -172,46 +77,87 @@
             return;
         }
 
-        // Exact match single employee only
-        const matchKey = Object.keys(DB).find(k => k.toLowerCase() === q || (DB[k].empId && DB[k].empId.toLowerCase() === q));
+        container.innerHTML = '<div class="msg-text" style="color:#1a73e8;">Live Sheet se data load ho raha hai...</div>';
 
-        if (!matchKey) {
-            container.innerHTML = '<div class="msg-text" style="color:#dc2626;">Koi record nahi mila. Sahi ID enter karein.</div>';
-            return;
+        try {
+            // Live fetch with timestamp to prevent cache
+            const res = await fetch(`${OT_SHEET_CSV}&_=${Date.now()}`);
+            const csvText = await res.text();
+
+            Papa.parse(csvText, {
+                header: false,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    const rows = results.data;
+                    if (!rows || rows.length < 2) {
+                        container.innerHTML = '<div class="msg-text" style="color:#dc2626;">Sheet load nahi ho saki.</div>';
+                        return;
+                    }
+
+                    const headers = rows[0]; // Dates from Row 1
+                    const dataRows = rows.slice(1);
+
+                    // Match only requested employee (Col A, B, or C)
+                    const empRow = dataRows.find(r => 
+                        (r[0] && r[0].toLowerCase() === q) || 
+                        (r[1] && r[1].toLowerCase() === q) || 
+                        (r[2] && r[2].toLowerCase() === q)
+                    );
+
+                    if (!empRow) {
+                        container.innerHTML = '<div class="msg-text" style="color:#dc2626;">Koi record nahi mila. Sahi ID enter karein.</div>';
+                        return;
+                    }
+
+                    const casperId = empRow[0] || empRow[2] || '---';
+                    const empId = empRow[1] || '---';
+                    const name = empRow[3] || 'Employee';
+                    const dept = empRow[4] || 'MH';
+
+                    let totalOt = 0;
+                    let rowsHtml = '';
+
+                    // Dates start from Column F (Index 5) to the last date in row 1
+                    for (let col = 5; col < headers.length; col++) {
+                        const dateText = headers[col];
+                        if (!dateText || dateText.toLowerCase().includes('total')) continue;
+
+                        const rawVal = empRow[col] || '';
+                        const hrs = parseFloat(rawVal) || 0;
+                        totalOt += hrs;
+
+                        rowsHtml += `
+                            <tr>
+                                <td><strong>${dateText}</strong></td>
+                                <td style="text-align:right;">${hrs > 0 ? `<span class="ot-badge">${hrs} Hrs</span>` : `<span class="zero-badge">0 Hrs</span>`}</td>
+                            </tr>
+                        `;
+                    }
+
+                    container.innerHTML = `
+                        <div class="emp-card">
+                            <div class="profile-bar">
+                                <div>
+                                    <h3>${name}</h3>
+                                    <p>ID: ${casperId} | Emp ID: ${empId} | Dept: ${dept}</p>
+                                </div>
+                                <div class="total-pill">Total: ${totalOt} Hrs</div>
+                            </div>
+                            <div class="table-wrap">
+                                <table class="ot-table">
+                                    <thead><tr><th>Date</th><th style="text-align:right;">OT Hours</th></tr></thead>
+                                    <tbody>${rowsHtml}</tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+        } catch (err) {
+            console.error(err);
+            container.innerHTML = '<div class="msg-text" style="color:#dc2626;">Error: Sheet permissions check karein (Anyone with the link can view honi chahiye).</div>';
         }
-
-        const emp = DB[matchKey];
-        let totalOt = 0;
-        let rowsHtml = '';
-
-        DATES.forEach(d => {
-            const hrs = (emp.ot && emp.ot[d]) ? parseFloat(emp.ot[d]) : 0;
-            totalOt += hrs;
-            rowsHtml += `
-                <tr>
-                    <td><strong>${d}</strong></td>
-                    <td style="text-align:right;">${hrs > 0 ? `<span class="ot-badge">${hrs} Hrs</span>` : `<span class="zero-badge">0 Hrs</span>`}</td>
-                </tr>
-            `;
-        });
-
-        container.innerHTML = `
-            <div class="emp-card">
-                <div class="profile-bar">
-                    <div>
-                        <h3>${emp.name}</h3>
-                        <p>ID: ${matchKey} | Emp ID: ${emp.empId} | Dept: ${emp.dept}</p>
-                    </div>
-                    <div class="total-pill">Total: ${totalOt} Hrs</div>
-                </div>
-                <div class="table-wrap">
-                    <table class="ot-table">
-                        <thead><tr><th>Date</th><th style="text-align:right;">OT Hours</th></tr></thead>
-                        <tbody>${rowsHtml}</tbody>
-                    </table>
-                </div>
-            </div>
-        `;
     }
 </script>
 </body>

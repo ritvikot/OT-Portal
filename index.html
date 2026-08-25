@@ -6,251 +6,252 @@
   <title>Employee Portal</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-    body { background: #f1f5f9; color: #1e293b; min-height: 100vh; display: flex; flex-direction: column; }
+    body { background: #f8fafc; color: #1e293b; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
     
     /* Login Box */
-    .login-container { max-width: 380px; margin: auto; padding: 30px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); width: 90%; }
-    .login-container h2 { font-size: 1.4rem; margin-bottom: 8px; color: #0f172a; text-align: center; }
-    .login-container p { font-size: 0.85rem; color: #64748b; margin-bottom: 20px; text-align: center; }
+    .login-box { max-width: 400px; width: 100%; background: #ffffff; padding: 32px 28px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+    .login-box h2 { font-size: 1.5rem; font-weight: 700; color: #0f172a; text-align: center; margin-bottom: 6px; }
+    .login-box p { font-size: 0.85rem; color: #64748b; text-align: center; margin-bottom: 24px; }
     .input-group { margin-bottom: 16px; }
-    .input-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; }
-    .input-group input { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; outline: none; }
+    .input-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; color: #334155; }
+    .input-group input { width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
     .input-group input:focus { border-color: #2563eb; }
-    .btn-login { width: 100%; padding: 10px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
-    .btn-login:hover { background: #1d4ed8; }
-    .error-msg { color: #ef4444; font-size: 0.8rem; margin-top: 10px; text-align: center; display: none; }
+    .btn-submit { width: 100%; padding: 12px; background: #2563eb; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background 0.2s; margin-top: 6px; }
+    .btn-submit:hover { background: #1d4ed8; }
+    .error-text { background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 6px; font-size: 0.85rem; text-align: center; margin-top: 14px; display: none; }
 
     /* Dashboard */
-    .dashboard { display: none; max-width: 1200px; margin: 20px auto; width: 95%; }
-    .dash-header { background: #0f172a; color: #fff; padding: 16px 24px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
-    .btn-logout { background: #ef4444; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; }
+    .dashboard-container { display: none; width: 100%; max-width: 1200px; margin: auto; }
+    .dash-header { background: #0f172a; color: #fff; padding: 20px 24px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
+    .dash-header h2 { font-size: 1.25rem; font-weight: 600; }
+    .btn-logout { background: #ef4444; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; }
+    .dash-body { background: #ffffff; padding: 24px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; border-top: none; }
     
-    .dash-body { background: #fff; padding: 24px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-    .stat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
-    .stat-card span { font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; }
-    .stat-card h3 { font-size: 1.4rem; color: #0f172a; margin-top: 6px; }
+    .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-tile { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+    .stat-tile span { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+    .stat-tile h3 { font-size: 1.4rem; color: #0f172a; margin-top: 6px; font-weight: 700; }
 
-    .section-title { font-size: 1.05rem; font-weight: 600; margin: 20px 0 10px 0; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; }
-    .table-wrapper { overflow-x: auto; margin-bottom: 20px; }
+    .sec-heading { font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 24px 0 12px 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px; }
+    .table-scroll { overflow-x: auto; margin-bottom: 16px; }
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
     th, td { padding: 10px 14px; border: 1px solid #e2e8f0; text-align: left; }
-    th { background: #1e293b; color: #fff; }
+    th { background: #1e293b; color: #ffffff; font-weight: 600; }
     tr:nth-child(even) { background: #f8fafc; }
   </style>
 </head>
 <body>
 
-  <!-- Login Section -->
-  <div class="login-container" id="loginBox">
+  <!-- 1. LOGIN SCREEN -->
+  <div class="login-box" id="loginScreen">
     <h2>Employee Login</h2>
-    <p>Apna User ID aur Password enter karein</p>
+    <p>Apna User ID aur Password daalein</p>
+    
     <div class="input-group">
-      <label>User ID (Casper ID)</label>
-      <input type="text" id="userIdInput" placeholder="Enter ID" />
+      <label>User ID / Casper ID</label>
+      <input type="text" id="userInput" placeholder="e.g. 2333480" />
     </div>
+    
     <div class="input-group">
       <label>Password</label>
-      <input type="password" id="passInput" placeholder="Enter Password" />
+      <input type="password" id="passInput" placeholder="Password" />
     </div>
-    <button class="btn-login" id="loginBtn" onclick="handleLogin()">Login</button>
-    <div class="error-msg" id="errorMsg">Invalid ID or Password!</div>
+
+    <button class="btn-submit" id="loginBtn" onclick="loginEmployee()">Login</button>
+    <div class="error-text" id="errBox">User ID ya Password galat hai.</div>
   </div>
 
-  <!-- Dashboard Section -->
-  <div class="dashboard" id="dashBox">
+  <!-- 2. DASHBOARD SCREEN (Only User's Private Data) -->
+  <div class="dashboard-container" id="dashScreen">
     <div class="dash-header">
       <div>
-        <h2 id="empNameDisplay">Welcome</h2>
-        <small id="empIdDisplay" style="color:#94a3b8;"></small>
+        <h2 id="nameTag">Welcome</h2>
+        <span id="idTag" style="color: #94a3b8; font-size: 0.8rem;"></span>
       </div>
-      <button class="btn-logout" onclick="handleLogout()">Logout</button>
+      <button class="btn-logout" onclick="logoutEmployee()">Logout</button>
     </div>
 
     <div class="dash-body">
-      <!-- Quick Summary Cards -->
-      <div class="summary-grid">
-        <div class="stat-card">
+      <!-- Top Cards -->
+      <div class="grid-stats">
+        <div class="stat-tile">
           <span>Total OverTime</span>
-          <h3 id="statTotalOt">0 Hrs</h3>
+          <h3 id="cardOT">0 Hrs</h3>
         </div>
-        <div class="stat-card">
-          <span>Food Allowance</span>
-          <h3 id="statFood">₹0</h3>
-        </div>
-        <div class="stat-card">
+        <div class="stat-tile">
           <span>Night Shift Allowance</span>
-          <h3 id="statNight">₹0</h3>
+          <h3 id="cardNight">₹0</h3>
         </div>
-        <div class="stat-card">
+        <div class="stat-tile">
+          <span>Food Allowance</span>
+          <h3 id="cardFood">₹0</h3>
+        </div>
+        <div class="stat-tile">
           <span>Active Bonus</span>
-          <h3 id="statBonus">₹0</h3>
+          <h3 id="cardBonus">₹0</h3>
         </div>
       </div>
 
-      <!-- OverTime Records -->
-      <div class="section-title">OverTime Details (MH)</div>
-      <div class="table-wrapper">
-        <table id="otTable">
-          <thead id="otHead"></thead>
-          <tbody id="otBody"></tbody>
+      <!-- OverTime MH Table -->
+      <div class="sec-heading">OverTime Summary (MH)</div>
+      <div class="table-scroll">
+        <table>
+          <thead id="headOT"></thead>
+          <tbody id="bodyOT"></tbody>
         </table>
       </div>
 
-      <!-- Payroll Records -->
-      <div class="section-title">Payroll Output</div>
-      <div class="table-wrapper">
-        <table id="payrollTable">
-          <thead id="payrollHead"></thead>
-          <tbody id="payrollBody"></tbody>
+      <!-- Payroll Table -->
+      <div class="sec-heading">Payroll Output Summary</div>
+      <div class="table-scroll">
+        <table>
+          <thead id="headPayroll"></thead>
+          <tbody id="bodyPayroll"></tbody>
         </table>
       </div>
     </div>
   </div>
 
   <script>
-    const SHEET1_ID = '1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0';
-    const SHEET2_ID = '1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0';
+    const SHEET_OT_ID = '1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0';
+    const SHEET_PAY_ID = '1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0';
 
-    async function fetchGViz(sheetId, tabName) {
-      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
+    async function fetchSheetJSON(sheetId, tab) {
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tab)}`;
       const res = await fetch(url);
-      const text = await res.text();
-      const json = JSON.parse(text.substring(47).slice(0, -2));
-      return { cols: json.table.cols, rows: json.table.rows };
+      const txt = await res.text();
+      const parsed = JSON.parse(txt.substring(47).slice(0, -2));
+      return { cols: parsed.table.cols, rows: parsed.table.rows };
     }
 
-    async function handleLogin() {
-      const uId = document.getElementById('userIdInput').value.trim();
+    async function loginEmployee() {
+      const uId = document.getElementById('userInput').value.trim();
       const uPass = document.getElementById('passInput').value.trim();
-      const err = document.getElementById('errorMsg');
-      const btn = document.getElementById('loginBtn');
+      const errBox = document.getElementById('errBox');
+      const loginBtn = document.getElementById('loginBtn');
 
       if (!uId || !uPass) {
-        err.innerText = "Dono fields fill karein.";
-        err.style.display = "block";
+        errBox.innerText = 'Dono fields bharna zaroori hai!';
+        errBox.style.display = 'block';
         return;
       }
 
-      btn.innerText = "Verifying...";
-      err.style.display = "none";
+      errBox.style.display = 'none';
+      loginBtn.innerText = 'Verifying...';
 
       try {
-        // Step 1: Verify from Users tab
-        const usersData = await fetchGViz(SHEET1_ID, 'Users');
-        let matchedUser = null;
+        // Step A: Check credentials against Users sheet
+        const userSheet = await fetchSheetJSON(SHEET_OT_ID, 'Users');
+        let activeUser = null;
 
-        usersData.rows.forEach(r => {
-          const idVal = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
-          const passVal = String(r.c[1] ? (r.c[1].f || r.c[1].v || '') : '').trim();
-          const nameVal = r.c[2] ? (r.c[2].f || r.c[2].v || '') : '';
+        userSheet.rows.forEach(r => {
+          const id = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
+          const pwd = String(r.c[1] ? (r.c[1].f || r.c[1].v || '') : '').trim();
+          const name = r.c[2] ? (r.c[2].f || r.c[2].v || '') : '';
 
-          if (idVal.toLowerCase() === uId.toLowerCase() && passVal === uPass) {
-            matchedUser = { id: idVal, name: nameVal };
+          if (id.toLowerCase() === uId.toLowerCase() && pwd === uPass) {
+            activeUser = { id, name };
           }
         });
 
-        if (!matchedUser) {
-          err.innerText = "Galat User ID ya Password!";
-          err.style.display = "block";
-          btn.innerText = "Login";
+        if (!activeUser) {
+          errBox.innerText = 'Invalid User ID ya Password!';
+          errBox.style.display = 'block';
+          loginBtn.innerText = 'Login';
           return;
         }
 
-        // Step 2: Fetch Data for this specific user
-        await loadUserData(matchedUser);
+        // Step B: Load Dashboard for this logged-in user only
+        await renderPersonalPortal(activeUser);
 
-        document.getElementById('loginBox').style.display = 'none';
-        document.getElementById('dashBox').style.display = 'block';
-      } catch (e) {
-        console.error(e);
-        err.innerText = "Data load karne me problem aayi. Sheet settings check karein.";
-        err.style.display = "block";
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashScreen').style.display = 'block';
+        document.body.style.alignItems = 'flex-start';
+
+      } catch (err) {
+        console.error(err);
+        errBox.innerText = 'Server error! Google Sheet access check karein.';
+        errBox.style.display = 'block';
       }
-      btn.innerText = "Login";
+      loginBtn.innerText = 'Login';
     }
 
-    async function loadUserData(user) {
-      document.getElementById('empNameDisplay').innerText = user.name || 'Employee';
-      document.getElementById('empIdDisplay').innerText = `User ID: ${user.id}`;
+    async function renderPersonalPortal(user) {
+      document.getElementById('nameTag').innerText = `Welcome, ${user.name}`;
+      document.getElementById('idTag').innerText = `ID: ${user.id}`;
 
       // 1. Fetch OverTime Sheet Data
-      const otData = await fetchGViz(SHEET1_ID, 'Data');
-      const otHead = document.getElementById('otHead');
-      const otBody = document.getElementById('otBody');
+      const otData = await fetchSheetJSON(SHEET_OT_ID, 'Data');
+      const headOT = document.getElementById('headOT');
+      const bodyOT = document.getElementById('bodyOT');
 
-      let otHeadRow = '<tr>';
-      otData.cols.forEach(c => { otHeadRow += `<th>${c.label || ''}</th>`; });
-      otHeadRow += '</tr>';
-      otHead.innerHTML = otHeadRow;
+      let hHtml1 = '<tr>';
+      otData.cols.forEach(c => { hHtml1 += `<th>${c.label || ''}</th>`; });
+      hHtml1 += '</tr>';
+      headOT.innerHTML = hHtml1;
 
-      let userOtRow = null;
+      let userOTRow = null;
       otData.rows.forEach(r => {
         const rowId = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
-        if (rowId.toLowerCase() === user.id.toLowerCase()) {
-          userOtRow = r;
-        }
+        if (rowId.toLowerCase() === user.id.toLowerCase()) userOTRow = r;
       });
 
-      if (userOtRow) {
-        let bodyHtml = '<tr>';
+      if (userOTRow) {
+        let bHtml1 = '<tr>';
         otData.cols.forEach((_, idx) => {
-          const cell = userOtRow.c[idx];
+          const cell = userOTRow.c[idx];
           const val = cell ? (cell.f !== undefined ? cell.f : (cell.v !== null ? cell.v : '')) : '';
-          bodyHtml += `<td>${val}</td>`;
+          bHtml1 += `<td>${val}</td>`;
         });
-        bodyHtml += '</tr>';
-        otBody.innerHTML = bodyHtml;
+        bHtml1 += '</tr>';
+        bodyOT.innerHTML = bHtml1;
 
-        // Last column as Total OT
-        const lastCell = userOtRow.c[userOtRow.c.length - 1];
-        document.getElementById('statTotalOt').innerText = `${lastCell ? (lastCell.f || lastCell.v || 0) : 0} Hrs`;
+        const lastC = userOTRow.c[userOTRow.c.length - 1];
+        document.getElementById('cardOT').innerText = `${lastC ? (lastC.f || lastC.v || 0) : 0} Hrs`;
       } else {
-        otBody.innerHTML = '<tr><td colspan="100%" style="text-align:center;">No OverTime record found.</td></tr>';
+        bodyOT.innerHTML = '<tr><td colspan="100%" style="text-align:center;">Koi OverTime record nahi mila.</td></tr>';
       }
 
       // 2. Fetch Payroll Sheet Data
-      const payData = await fetchGViz(SHEET2_ID, 'Sheet1');
-      const payrollHead = document.getElementById('payrollHead');
-      const payrollBody = document.getElementById('payrollBody');
+      const payData = await fetchSheetJSON(SHEET_PAY_ID, 'Sheet1');
+      const headPay = document.getElementById('headPayroll');
+      const bodyPay = document.getElementById('bodyPayroll');
 
-      let payHeadRow = '<tr>';
-      payData.cols.forEach(c => { payHeadRow += `<th>${c.label || ''}</th>`; });
-      payHeadRow += '</tr>';
-      payrollHead.innerHTML = payHeadRow;
+      let hHtml2 = '<tr>';
+      payData.cols.forEach(c => { hHtml2 += `<th>${c.label || ''}</th>`; });
+      hHtml2 += '</tr>';
+      headPay.innerHTML = hHtml2;
 
       let userPayRow = null;
       payData.rows.forEach(r => {
         const rowId = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
-        if (rowId.toLowerCase() === user.id.toLowerCase()) {
-          userPayRow = r;
-        }
+        if (rowId.toLowerCase() === user.id.toLowerCase()) userPayRow = r;
       });
 
       if (userPayRow) {
-        let bodyHtml = '<tr>';
+        let bHtml2 = '<tr>';
         payData.cols.forEach((_, idx) => {
           const cell = userPayRow.c[idx];
           const val = cell ? (cell.f !== undefined ? cell.f : (cell.v !== null ? cell.v : '')) : '';
-          bodyHtml += `<td>${val}</td>`;
+          bHtml2 += `<td>${val}</td>`;
         });
-        bodyHtml += '</tr>';
-        payrollBody.innerHTML = bodyHtml;
+        bHtml2 += '</tr>';
+        bodyPay.innerHTML = bHtml2;
 
-        // Match indexes based on Payroll sheet headers
-        document.getElementById('statNight').innerText = `₹${userPayRow.c[4] ? (userPayRow.c[4].v || 0) : 0}`;
-        document.getElementById('statFood').innerText = `₹${userPayRow.c[5] ? (userPayRow.c[5].v || 0) : 0}`;
-        document.getElementById('statBonus').innerText = `₹${userPayRow.c[7] ? (userPayRow.c[7].v || 0) : 0}`;
+        document.getElementById('cardNight').innerText = `₹${userPayRow.c[4] ? (userPayRow.c[4].v || 0) : 0}`;
+        document.getElementById('cardFood').innerText = `₹${userPayRow.c[5] ? (userPayRow.c[5].v || 0) : 0}`;
+        document.getElementById('cardBonus').innerText = `₹${userPayRow.c[7] ? (userPayRow.c[7].v || 0) : 0}`;
       } else {
-        payrollBody.innerHTML = '<tr><td colspan="100%" style="text-align:center;">No Payroll record found.</td></tr>';
+        bodyPay.innerHTML = '<tr><td colspan="100%" style="text-align:center;">Koi Payroll record nahi mila.</td></tr>';
       }
     }
 
-    function handleLogout() {
-      document.getElementById('userIdInput').value = '';
+    function logoutEmployee() {
+      document.getElementById('userInput').value = '';
       document.getElementById('passInput').value = '';
-      document.getElementById('dashBox').style.display = 'none';
-      document.getElementById('loginBox').style.display = 'block';
+      document.getElementById('dashScreen').style.display = 'none';
+      document.getElementById('loginScreen').style.display = 'block';
+      document.body.style.alignItems = 'center';
     }
   </script>
 </body>

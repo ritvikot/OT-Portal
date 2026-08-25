@@ -61,15 +61,14 @@
     </div>
 
     <div class="content-area">
-        <!-- LOGIN SECTION -->
+        <!-- 1. LOGIN SECTION -->
         <div id="loginSection" class="login-box">
-            <input type="text" id="empIdInput" class="input-box" placeholder="Enter ASSOCIATE ID / CASPER ID">
-            <input type="password" id="passInput" class="input-box" placeholder="Enter Emp ID / Password (Optional)">
+            <input type="text" id="empIdInput" class="input-box" placeholder="Enter ASSOCIATE ID / CASPER ID / EMP ID">
             <button class="btn-main" onclick="handleLogin()">Login</button>
             <div id="loginMsg" style="color: #dc2626; font-size: 13px; text-align: center; margin-top: 4px;"></div>
         </div>
 
-        <!-- DASHBOARD SECTION -->
+        <!-- 2. DASHBOARD SECTION -->
         <div id="dashboardSection" style="display: none;">
             <div class="profile-bar">
                 <div>
@@ -139,7 +138,6 @@
         "16-September-26", "17-September-26", "18-September-26", "19-September-26", "20-September-26"
     ];
 
-    // Accurate In-Memory Database for all employees
     const DB = {
         "2333480": { name: "Bobby", empId: "A21648", dept: "MH", ot: { "22-August-26": 2 } },
         "2328716": { name: "manju gahalot", empId: "th162372", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 2 } },
@@ -245,7 +243,6 @@
 
     async function handleLogin() {
         const inputId = document.getElementById('empIdInput').value.trim();
-        const inputPass = document.getElementById('passInput').value.trim();
         const msg = document.getElementById('loginMsg');
         msg.innerText = "";
 
@@ -254,24 +251,17 @@
             return;
         }
 
-        // Direct Lookup
-        const empKey = Object.keys(DB).find(k => k === inputId || (DB[k].empId && DB[k].empId.toLowerCase() === inputId.toLowerCase()));
+        // Search in OT Database
+        const empKey = Object.keys(DB).find(k => k.toLowerCase() === inputId.toLowerCase() || (DB[k].empId && DB[k].empId.toLowerCase() === inputId.toLowerCase()));
         const empData = empKey ? DB[empKey] : null;
 
-        // Payroll Fetch
+        // Fetch Live Payroll
         const payrollRows = await fetchPayroll();
-        const payrollRow = payrollRows.find(r => r[0] === inputId || (empKey && r[0] === empKey));
+        const payrollRow = payrollRows.find(r => (r[0] && r[0].toLowerCase() === inputId.toLowerCase()) || (empKey && r[0] && r[0].toLowerCase() === empKey.toLowerCase()));
 
         if (!empData && !payrollRow) {
             msg.style.color = "#dc2626";
             msg.innerText = `ID: ${inputId} का रिकॉर्ड नहीं मिला!`;
-            return;
-        }
-
-        // Optional Password Check
-        if (inputPass && empData && empData.empId && empData.empId.toLowerCase() !== inputPass.toLowerCase()) {
-            msg.style.color = "#dc2626";
-            msg.innerText = "गलत पासवर्ड / Emp ID!";
             return;
         }
 
@@ -329,7 +319,6 @@
 
     function handleLogout() {
         document.getElementById('empIdInput').value = '';
-        document.getElementById('passInput').value = '';
         document.getElementById('dashboardSection').style.display = 'none';
         document.getElementById('loginSection').style.display = 'flex';
         document.getElementById('loginMsg').innerText = '';

@@ -26,7 +26,12 @@
         .profile-info p { font-size: 13px; color: #64748b; font-weight: 500; }
         .btn-logout { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
         
-        /* Grid Cards */
+        /* Tabs */
+        .tab-nav { display: flex; border-bottom: 1.5px solid #e2e8f0; margin-bottom: 16px; }
+        .tab-btn { flex: 1; padding: 10px; background: none; border: none; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab-btn.active { color: #1a73e8; border-bottom-color: #1a73e8; }
+        
+        /* Cards */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .card-stat { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; }
         .card-stat.full-width { grid-column: span 2; }
@@ -34,7 +39,8 @@
         .card-stat p { font-size: 17px; font-weight: 700; color: #0f172a; }
         .amount-pending { color: #dc2626 !important; }
         .amount-green { color: #16a34a !important; }
-        .remarks-text { font-size: 14px !important; font-weight: 500 !important; color: #475569 !important; }
+        .remarks-box { background: #fffbeb; border-color: #fef3c7; }
+        .remarks-text { font-size: 13px !important; font-weight: 500 !important; color: #92400e !important; }
     </style>
 </head>
 <body>
@@ -62,36 +68,42 @@
                 <button class="btn-logout" onclick="handleLogout()">Logout</button>
             </div>
 
-            <!-- Payroll Grid (All 11 Fields) -->
-            <div class="grid-2">
-                <!-- 1 -->
-                <div class="card-stat"><span>FEMALE ATT. INCENTIVE</span><p id="femaleAtt">₹0</p></div>
-                <!-- 2 -->
-                <div class="card-stat"><span>NIGHT SHIFT ALLOW.</span><p id="nightShift">₹0</p></div>
-                <!-- 3 -->
-                <div class="card-stat"><span>FOOD ALLOWANCE</span><p id="foodAllowance">₹0</p></div>
-                <!-- 4 -->
-                <div class="card-stat"><span>B SHIFT INCENTIVE</span><p id="bShift">₹0</p></div>
-                <!-- 5 -->
-                <div class="card-stat"><span>ACTIVE BONUS</span><p id="activeBonus">₹0</p></div>
-                <!-- 6 -->
-                <div class="card-stat"><span>HOLIDAY WORKING 15 AUG'26</span><p id="holidayWorking">₹0</p></div>
-                <!-- 7 -->
-                <div class="card-stat"><span>OT AMOUNT</span><p id="otAmount">₹0</p></div>
-                <!-- 8 -->
-                <div class="card-stat"><span>UNNATI SCHEME</span><p id="unnatiScheme" class="amount-green">₹0</p></div>
-                <!-- 9 -->
-                <div class="card-stat"><span>LOPR DAYS</span><p id="loprDays">0</p></div>
-                <!-- 10 -->
-                <div class="card-stat"><span>PENDING AMOUNT</span><p id="pendingAmount" class="amount-pending">₹0</p></div>
-                <!-- 11 -->
-                <div class="card-stat full-width"><span>HR REMARKS</span><p id="hrRemarks" class="remarks-text">No remarks</p></div>
+            <!-- Tab Navigation -->
+            <div class="tab-nav">
+                <button class="tab-btn" id="otTabBtn" onclick="toggleTab('ot')">OverTime Details</button>
+                <button class="tab-btn active" id="payrollTabBtn" onclick="toggleTab('payroll')">Payroll & Allowances</button>
+            </div>
+
+            <!-- Tab 1: Payroll & Allowances -->
+            <div id="payrollTab">
+                <div class="grid-2">
+                    <div class="card-stat"><span>1. FEMALE ATT. INCENTIVE</span><p id="femaleAtt">₹0</p></div>
+                    <div class="card-stat"><span>2. NIGHT SHIFT ALLOW.</span><p id="nightShift">₹0</p></div>
+                    <div class="card-stat"><span>3. FOOD ALLOWANCE</span><p id="foodAllowance">₹0</p></div>
+                    <div class="card-stat"><span>4. B SHIFT INCENTIVE</span><p id="bShift">₹0</p></div>
+                    <div class="card-stat"><span>5. ACTIVE BONUS</span><p id="activeBonus">₹0</p></div>
+                    <div class="card-stat"><span>6. HOLIDAY WORK 15 AUG</span><p id="holidayWorking">₹0</p></div>
+                    <div class="card-stat"><span>7. OT (PAYROLL)</span><p id="otPayroll">₹0</p></div>
+                    <div class="card-stat"><span>8. UNNATI SCHEME</span><p id="unnatiScheme" class="amount-green">₹0</p></div>
+                    <div class="card-stat"><span>9. LOPR DAYS</span><p id="loprDays">0</p></div>
+                    <div class="card-stat"><span>10. PENDING AMOUNT</span><p id="pendingAmount" class="amount-pending">₹0</p></div>
+                    <div class="card-stat full-width remarks-box"><span>11. HR REMARKS</span><p id="hrRemarks" class="remarks-text">None</p></div>
+                </div>
+            </div>
+
+            <!-- Tab 2: OverTime Details (Sheet 1) -->
+            <div id="otTab" style="display: none;">
+                <div class="grid-2">
+                    <div class="card-stat full-width"><span>TOTAL OT HOURS</span><p id="otHours">0</p></div>
+                    <div class="card-stat full-width"><span>TOTAL OT AMOUNT</span><p id="otAmount">₹0</p></div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    const URL_OT = 'https://docs.google.com/spreadsheets/d/1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0/gviz/tq?tqx=out:json&gid=552193494';
     const URL_PAYROLL = 'https://docs.google.com/spreadsheets/d/1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0/gviz/tq?tqx=out:json&gid=0';
 
     async function fetchRows(url) {
@@ -112,10 +124,15 @@
         }
 
         try {
-            const payrollRows = await fetchRows(URL_PAYROLL);
-            const payrollRow = payrollRows.find(r => r[0] === inputId);
+            const [otRows, payrollRows] = await Promise.all([
+                fetchRows(URL_OT),
+                fetchRows(URL_PAYROLL)
+            ]);
 
-            if (!payrollRow) {
+            const payrollRow = payrollRows.find(r => r[0] === inputId);
+            const otRow = otRows.find(r => r[0] === inputId);
+
+            if (!payrollRow && !otRow) {
                 alert(`ASSOCIATE ID: ${inputId} का डेटा नहीं मिला!`);
                 return;
             }
@@ -123,27 +140,41 @@
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
 
-            // Basic Info
-            document.getElementById('empName').innerText = payrollRow[1] || 'Associate';          // Col B
-            document.getElementById('empIdDisplay').innerText = inputId;                          // Col A
-            
-            // 11 Fields Mapping
-            document.getElementById('femaleAtt').innerText = '₹' + (payrollRow[3] || '0');         // 1. Col D
-            document.getElementById('nightShift').innerText = '₹' + (payrollRow[4] || '0');        // 2. Col E
-            document.getElementById('foodAllowance').innerText = '₹' + (payrollRow[5] || '0');     // 3. Col F
-            document.getElementById('bShift').innerText = '₹' + (payrollRow[6] || '0');            // 4. Col G
-            document.getElementById('activeBonus').innerText = '₹' + (payrollRow[7] || '0');       // 5. Col H
-            document.getElementById('holidayWorking').innerText = '₹' + (payrollRow[8] || '0');    // 6. Col I
-            document.getElementById('otAmount').innerText = '₹' + (payrollRow[9] || '0');          // 7. Col J
-            document.getElementById('unnatiScheme').innerText = '₹' + (payrollRow[10] || '0');     // 8. Col K
-            document.getElementById('loprDays').innerText = payrollRow[11] || '0';                 // 9. Col L
-            document.getElementById('pendingAmount').innerText = '₹' + (payrollRow[12] || '0');    // 10. Col M
-            document.getElementById('hrRemarks').innerText = payrollRow[13] || 'N/A';              // 11. Col N (HR Remarks)
+            // Payroll Data (Sheet 2 Row 1 Mapping)
+            if (payrollRow) {
+                document.getElementById('empName').innerText = payrollRow[1] || 'Associate';          // Col B (FIRST NAME)
+                document.getElementById('empIdDisplay').innerText = inputId;                          // Col A (ASSOCIATE ID)
+                
+                document.getElementById('femaleAtt').innerText = '₹' + (payrollRow[3] || '0');         // 1. Col D
+                document.getElementById('nightShift').innerText = '₹' + (payrollRow[4] || '0');        // 2. Col E
+                document.getElementById('foodAllowance').innerText = '₹' + (payrollRow[5] || '0');     // 3. Col F
+                document.getElementById('bShift').innerText = '₹' + (payrollRow[6] || '0');            // 4. Col G
+                document.getElementById('activeBonus').innerText = '₹' + (payrollRow[7] || '0');       // 5. Col H
+                document.getElementById('holidayWorking').innerText = '₹' + (payrollRow[8] || '0');    // 6. Col I
+                document.getElementById('otPayroll').innerText = '₹' + (payrollRow[9] || '0');         // 7. Col J
+                document.getElementById('unnatiScheme').innerText = '₹' + (payrollRow[10] || '0');     // 8. Col K
+                document.getElementById('loprDays').innerText = payrollRow[11] || '0';                 // 9. Col L
+                document.getElementById('pendingAmount').innerText = '₹' + (payrollRow[12] || '0');    // 10. Col M
+                document.getElementById('hrRemarks').innerText = payrollRow[13] || 'No remarks';      // 11. Col N
+            }
+
+            // OT Sheet Data (Sheet 1)
+            if (otRow) {
+                document.getElementById('otHours').innerText = otRow[2] || '0';
+                document.getElementById('otAmount').innerText = '₹' + (otRow[3] || '0');
+            }
 
         } catch (err) {
             console.error("Fetch Error:", err);
             alert("डेटा लोड करने में समस्या आई।");
         }
+    }
+
+    function toggleTab(tab) {
+        document.getElementById('payrollTab').style.display = tab === 'payroll' ? 'block' : 'none';
+        document.getElementById('otTab').style.display = tab === 'ot' ? 'block' : 'none';
+        document.getElementById('payrollTabBtn').classList.toggle('active', tab === 'payroll');
+        document.getElementById('otTabBtn').classList.toggle('active', tab === 'ot');
     }
 
     function handleLogout() {

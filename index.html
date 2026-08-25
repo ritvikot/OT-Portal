@@ -13,25 +13,25 @@
         .header-banner p { font-size: 13px; opacity: 0.9; }
         .content-area { padding: 20px; }
         
-        /* Login Box */
+        /* Login */
         .login-box { display: flex; flex-direction: column; gap: 12px; }
         .login-box input { width: 100%; padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; transition: 0.2s; }
         .login-box input:focus { border-color: #1a73e8; }
         .btn-primary { background: #1a73e8; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
         .btn-primary:hover { background: #1557b0; }
         
-        /* Dashboard Header */
+        /* Profile Header */
         .profile-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .profile-info h3 { font-size: 18px; color: #0f172a; }
         .profile-info p { font-size: 13px; color: #64748b; font-weight: 500; }
         .btn-logout { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
         
-        /* Tab Navigation */
+        /* Tabs */
         .tab-nav { display: flex; border-bottom: 1.5px solid #e2e8f0; margin-bottom: 16px; }
         .tab-btn { flex: 1; padding: 10px; background: none; border: none; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; }
         .tab-btn.active { color: #1a73e8; border-bottom-color: #1a73e8; }
         
-        /* Grid Cards for Payroll */
+        /* Payroll Cards */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .card-stat { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; }
         .card-stat.full-width { grid-column: span 2; }
@@ -42,15 +42,15 @@
         .remarks-box { background: #fffbeb; border-color: #fef3c7; }
         .remarks-text { font-size: 13px !important; font-weight: 500 !important; color: #92400e !important; }
 
-        /* OverTime Table Styles */
-        .ot-summary-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px; text-align: center; margin-bottom: 14px; }
-        .ot-summary-card span { font-size: 12px; font-weight: 700; color: #1e40af; text-transform: uppercase; }
-        .ot-summary-card p { font-size: 22px; font-weight: 800; color: #1e3a8a; }
+        /* OverTime Table UI */
+        .ot-summary-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px; text-align: center; margin-bottom: 12px; }
+        .ot-summary-box span { font-size: 11px; font-weight: 700; color: #1e40af; text-transform: uppercase; }
+        .ot-summary-box p { font-size: 22px; font-weight: 800; color: #1e3a8a; }
         
         .table-wrap { max-height: 280px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
         .ot-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
         .ot-table th { background: #f8fafc; color: #475569; font-weight: 600; padding: 10px 12px; position: sticky; top: 0; border-bottom: 1px solid #cbd5e1; }
-        .ot-table td { padding: 9px 12px; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
+        .ot-table td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
         .ot-table tr:hover { background: #f8fafc; }
         .ot-badge { background: #dcfce7; color: #15803d; font-weight: 700; padding: 2px 8px; border-radius: 6px; display: inline-block; }
     </style>
@@ -67,7 +67,7 @@
         <!-- 1. LOGIN SCREEN -->
         <div id="loginSection" class="login-box">
             <input type="text" id="associateIdInput" placeholder="Enter ASSOCIATE ID / CASPER ID">
-            <input type="password" id="passwordInput" placeholder="Enter Password / Emp ID (Optional)">
+            <input type="password" id="passwordInput" placeholder="Enter Emp ID / Password (Optional)">
             <button class="btn-primary" onclick="handleLogin()">Login</button>
         </div>
 
@@ -87,9 +87,9 @@
                 <button class="tab-btn" id="payrollTabBtn" onclick="toggleTab('payroll')">Payroll & Allowances</button>
             </div>
 
-            <!-- Tab 1: OverTime Table View (Sheet 1) -->
+            <!-- Tab 1: OverTime Table (Sheet 1) -->
             <div id="otTab">
-                <div class="ot-summary-card">
+                <div class="ot-summary-box">
                     <span>Total OverTime Hours</span>
                     <p id="totalOtHours">0 Hrs</p>
                 </div>
@@ -102,7 +102,7 @@
                             </tr>
                         </thead>
                         <tbody id="otTableBody">
-                            <!-- Date-wise rows will load here -->
+                            <!-- Rows dynamically populated -->
                         </tbody>
                     </table>
                 </div>
@@ -138,10 +138,16 @@
         const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
         const data = JSON.parse(jsonStr);
         
-        const headers = data.table.cols.map(c => (c.label || '').trim());
-        const rows = data.table.rows.map(row => 
+        let headers = data.table.cols.map(c => (c.label || '').trim());
+        let rows = data.table.rows.map(row => 
             row.c ? row.c.map(cell => (cell && cell.v !== null && cell.v !== undefined) ? cell.v.toString().trim() : '') : []
         );
+
+        if (headers.every(h => h === '') && rows.length > 0) {
+            headers = rows[0];
+            rows = rows.slice(1);
+        }
+
         return { headers, rows };
     }
 
@@ -160,9 +166,9 @@
                 fetchSheetData(URL_PAYROLL)
             ]);
 
-            // Sheet 1 (OT Sheet): Col A (Casper), Col B (Emp id), Col C (Casper)
+            // Sheet 1: Col A (Casper), Col B (Emp id), Col C (Casper)
             const otRow = otData.rows.find(r => r[0] === inputId || r[1] === inputId || r[2] === inputId);
-            // Sheet 2 (Payroll): Col A (ASSOCIATE ID)
+            // Sheet 2: Col A (ASSOCIATE ID)
             const payrollRow = payrollData.rows.find(r => r[0] === inputId || (otRow && (r[0] === otRow[0] || r[0] === otRow[2])));
 
             if (!otRow && !payrollRow) {
@@ -170,7 +176,7 @@
                 return;
             }
 
-            // Password check (Emp ID as password if provided)
+            // Password check (Emp ID in Sheet 1 Col B as optional password)
             if (inputPass && otRow && otRow[1] && otRow[1].toLowerCase() !== inputPass.toLowerCase()) {
                 alert("गलत पासवर्ड / Emp ID!");
                 return;
@@ -179,40 +185,40 @@
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
 
-            // Profile info
+            // Employee Profile Header
             const name = (otRow && otRow[3]) || (payrollRow && payrollRow[1]) || 'Associate';
             const dept = (otRow && otRow[4]) || 'N/A';
             document.getElementById('empName').innerText = name;
             document.getElementById('empIdDisplay').innerText = inputId;
             document.getElementById('empDept').innerText = dept;
 
-            // --- 1. OVERTIME DATE-WISE TABLE (From Sheet 1) ---
+            // --- 1. OVERTIME DATE-WISE TABLE (Sheet 1) ---
             const tbody = document.getElementById('otTableBody');
             tbody.innerHTML = '';
             let totalOt = 0;
 
             if (otRow) {
-                // Dates start from Column F (Index 5)
-                for (let colIdx = 5; colIdx < otData.headers.length; colIdx++) {
-                    const dateHeader = otData.headers[colIdx];
-                    if (!dateHeader) continue;
+                // Dates start from Col F (Index 5)
+                for (let i = 5; i < otData.headers.length; i++) {
+                    const dateTitle = otData.headers[i];
+                    if (!dateTitle) continue;
 
-                    const hours = parseFloat(otRow[colIdx]) || 0;
-                    totalOt += hours;
+                    const val = parseFloat(otRow[i]) || 0;
+                    totalOt += val;
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>${dateHeader}</td>
-                        <td style="text-align: right;">${hours > 0 ? `<span class="ot-badge">${hours} Hrs</span>` : '<span style="color:#94a3b8;">0</span>'}</td>
+                        <td>${dateTitle}</td>
+                        <td style="text-align: right;">${val > 0 ? `<span class="ot-badge">${val} Hrs</span>` : '<span style="color:#94a3b8;">0</span>'}</td>
                     `;
                     tbody.appendChild(tr);
                 }
             } else {
-                tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:#94a3b8;padding:16px;">No OT record found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:#94a3b8;padding:16px;">No OverTime record found</td></tr>';
             }
             document.getElementById('totalOtHours').innerText = `${totalOt} Hrs`;
 
-            // --- 2. PAYROLL DATA (From Sheet 2) ---
+            // --- 2. PAYROLL DATA (Sheet 2) ---
             if (payrollRow) {
                 document.getElementById('femaleAtt').innerText = '₹' + (payrollRow[3] || '0');
                 document.getElementById('nightShift').innerText = '₹' + (payrollRow[4] || '0');

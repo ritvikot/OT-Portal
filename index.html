@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Employee OverTime & Payroll Portal</title>
+  <title>Employee Self Service Portal</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; }
     body { background: #0f172a; color: #1e293b; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
 
-    /* Search / Login Card */
-    .portal-card { background: #ffffff; width: 100%; max-width: 440px; padding: 32px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); }
+    /* Login / Search Screen */
+    .portal-card { background: #ffffff; width: 100%; max-width: 420px; padding: 32px 28px; border-radius: 16px; box-shadow: 0 20px 30px rgba(0,0,0,0.3); }
     .portal-card h2 { font-size: 1.5rem; font-weight: 700; color: #0f172a; text-align: center; }
     .portal-card p { font-size: 0.85rem; color: #64748b; text-align: center; margin: 6px 0 24px 0; }
     
@@ -21,55 +21,68 @@
     .btn-search { width: 100%; padding: 12px; background: #2563eb; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
     .btn-search:hover { background: #1d4ed8; }
 
-    .msg-alert { padding: 10px; border-radius: 6px; font-size: 0.85rem; text-align: center; margin-top: 14px; display: none; }
-    .msg-error { background: #fee2e2; color: #b91c1c; }
+    .msg-alert { padding: 10px; border-radius: 6px; font-size: 0.85rem; text-align: center; margin-top: 14px; display: none; background: #fee2e2; color: #b91c1c; }
 
-    /* Result Dashboard (Hidden by default) */
-    .result-container { display: none; width: 100%; max-width: 1100px; }
-    .res-header { background: #1e293b; color: #ffffff; padding: 20px 24px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
+    /* Dashboard Container */
+    .result-container { display: none; width: 100%; max-width: 1100px; margin: auto; }
+    .res-header { background: #1e293b; color: #ffffff; padding: 18px 24px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
     .res-header h2 { font-size: 1.3rem; }
-    .btn-back { background: #475569; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
-    .btn-back:hover { background: #334155; }
+    .btn-back { background: #ef4444; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+    .btn-back:hover { background: #dc2626; }
 
-    .res-body { background: #ffffff; padding: 24px; border-radius: 0 0 12px 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+    .res-body { background: #ffffff; padding: 24px; border-radius: 0 0 12px 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
-    .stat-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
-    .stat-box span { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
-    .stat-box h3 { font-size: 1.3rem; color: #0f172a; margin-top: 4px; }
+    /* Top Stat Tiles */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .stat-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; }
+    .stat-box span { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-box h3 { font-size: 1.4rem; color: #0f172a; margin-top: 6px; font-weight: 700; }
 
-    .section-label { font-size: 1rem; font-weight: 700; color: #0f172a; margin: 20px 0 10px 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px; }
-    .table-box { overflow-x: auto; margin-bottom: 16px; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; white-space: nowrap; }
-    th, td { padding: 10px 14px; border: 1px solid #e2e8f0; text-align: left; }
-    th { background: #0f172a; color: #ffffff; font-weight: 600; }
+    /* Tab Controller */
+    .tab-nav { display: flex; gap: 10px; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; }
+    .tab-btn { padding: 10px 20px; font-size: 0.9rem; font-weight: 600; color: #64748b; background: none; border: none; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+    .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
+
+    /* Tables & Card Views */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    .table-responsive { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; white-space: nowrap; }
+    th, td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+    th { background: #1e293b; color: #ffffff; font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
     tr:nth-child(even) { background: #f8fafc; }
+    
+    /* Highlight non-zero OT */
+    .has-ot { background-color: #ecfdf5 !important; font-weight: 600; color: #059669; }
+    .badge-ot { background: #10b981; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; }
   </style>
 </head>
 <body>
 
-  <!-- 1. SEARCH / LOGIN FORM (Public screen par sirf ye dikhega) -->
+  <!-- Search/Login Box -->
   <div class="portal-card" id="searchBox">
     <h2>Employee Portal</h2>
-    <p>Apna data dekhne ke liye ID enter karein</p>
+    <p>Apna data dekhne ke liye ID daalein</p>
 
     <div class="input-field">
       <label>User ID / Casper ID</label>
-      <input type="text" id="empIdInput" placeholder="Enter ID (e.g. 2333480)" onkeypress="handleKey(event)" />
+      <input type="text" id="empIdInput" placeholder="e.g. 2333480" onkeypress="handleKey(event)" />
     </div>
 
-    <button class="btn-search" id="submitBtn" onclick="searchRecord()">Search Details</button>
-    <div class="msg-alert msg-error" id="errorNotice">Record nahi mila! Kripya sahi ID daalein.</div>
+    <button class="btn-search" id="submitBtn" onclick="searchRecord()">View My Details</button>
+    <div class="msg-alert" id="errorNotice">Record nahi mila! Kripya sahi ID daalein.</div>
   </div>
 
-  <!-- 2. EMPLOYEE DETAILS VIEW (Sirf Search hone par aayega) -->
+  <!-- Dashboard Container -->
   <div class="result-container" id="resultBox">
     <div class="res-header">
       <div>
-        <h2 id="dispName">Employee Name</h2>
+        <h2 id="dispName">Welcome</h2>
         <span id="dispId" style="color: #94a3b8; font-size: 0.85rem;"></span>
       </div>
-      <button class="btn-back" onclick="goBack()">← New Search</button>
+      <button class="btn-back" onclick="goBack()">Logout / Search Again</button>
     </div>
 
     <div class="res-body">
@@ -80,12 +93,12 @@
           <h3 id="cardOT">0 Hrs</h3>
         </div>
         <div class="stat-box">
-          <span>Food Allowance</span>
-          <h3 id="cardFood">₹0</h3>
-        </div>
-        <div class="stat-box">
           <span>Night Shift Allowance</span>
           <h3 id="cardNight">₹0</h3>
+        </div>
+        <div class="stat-box">
+          <span>Food Allowance</span>
+          <h3 id="cardFood">₹0</h3>
         </div>
         <div class="stat-box">
           <span>Active Bonus</span>
@@ -93,22 +106,37 @@
         </div>
       </div>
 
-      <!-- OverTime Record -->
-      <div class="section-label">OverTime Record (MH)</div>
-      <div class="table-box">
-        <table>
-          <thead id="otHead"></thead>
-          <tbody id="otBody"></tbody>
-        </table>
+      <!-- Tab Buttons -->
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchView('tab-ot', this)">OverTime Details (Date-Wise)</button>
+        <button class="tab-btn" onclick="switchView('tab-pay', this)">Payroll Output Summary</button>
       </div>
 
-      <!-- Payroll Record -->
-      <div class="section-label">Payroll Summary</div>
-      <div class="table-box">
-        <table>
-          <thead id="payHead"></thead>
-          <tbody id="payBody"></tbody>
-        </table>
+      <!-- TAB 1: OverTime Date-Wise Table -->
+      <div class="tab-content active" id="tab-ot">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 60px;">#</th>
+                <th>Date</th>
+                <th>OverTime Hours</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="otDateWiseBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 2: Payroll Summary Table -->
+      <div class="tab-content" id="tab-pay">
+        <div class="table-responsive">
+          <table>
+            <thead id="payHead"></thead>
+            <tbody id="payBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -119,6 +147,13 @@
 
     function handleKey(e) {
       if (e.key === 'Enter') searchRecord();
+    }
+
+    function switchView(tabId, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
     }
 
     async function fetchGViz(sheetId, tab) {
@@ -141,10 +176,9 @@
       }
 
       err.style.display = 'none';
-      btn.innerText = 'Searching...';
+      btn.innerText = 'Fetching...';
 
       try {
-        // Fetch dono sheets ka data
         const [otData, payData] = await Promise.all([
           fetchGViz(SHEET_OT_ID, 'Data'),
           fetchGViz(SHEET_PAY_ID, 'Sheet1')
@@ -153,9 +187,9 @@
         // 1. Find OT Row
         let otRow = null;
         otData.rows.forEach(r => {
-          const col0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
-          const col1 = String(r.c[1] ? (r.c[1].f || r.c[1].v || '') : '').trim();
-          if (col0.toLowerCase() === queryId.toLowerCase() || col1.toLowerCase() === queryId.toLowerCase()) {
+          const c0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
+          const c1 = String(r.c[1] ? (r.c[1].f || r.c[1].v || '') : '').trim();
+          if (c0.toLowerCase() === queryId.toLowerCase() || c1.toLowerCase() === queryId.toLowerCase()) {
             otRow = r;
           }
         });
@@ -163,8 +197,8 @@
         // 2. Find Payroll Row
         let payRow = null;
         payData.rows.forEach(r => {
-          const col0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
-          if (col0.toLowerCase() === queryId.toLowerCase()) {
+          const c0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
+          if (c0.toLowerCase() === queryId.toLowerCase()) {
             payRow = r;
           }
         });
@@ -172,44 +206,51 @@
         if (!otRow && !payRow) {
           err.innerText = "Is ID ka koi record nahi mila!";
           err.style.display = 'block';
-          btn.innerText = 'Search Details';
+          btn.innerText = 'View My Details';
           return;
         }
 
-        // Set Name and ID Header
+        // Setup Header Info
         const name = (otRow && otRow.c[3] ? (otRow.c[3].f || otRow.c[3].v) : '') || 
                      (payRow && payRow.c[1] ? (payRow.c[1].f || payRow.c[1].v) : '') || 'Employee Details';
-        document.getElementById('dispName').innerText = name;
-        document.getElementById('dispId').innerText = `Searched ID: ${queryId}`;
+        document.getElementById('dispName').innerText = `Welcome, ${name}`;
+        document.getElementById('dispId').innerText = `ID: ${queryId}`;
 
-        // Populate OT Table & Stat
-        const otHead = document.getElementById('otHead');
-        const otBody = document.getElementById('otBody');
-        let otH = '<tr>';
-        otData.cols.forEach(c => { otH += `<th>${c.label || ''}</th>`; });
-        otH += '</tr>';
-        otHead.innerHTML = otH;
+        // Build Date-wise OverTime Table (Cols 5 to second-to-last are dates)
+        const otDateBody = document.getElementById('otDateWiseBody');
+        let otDateHtml = '';
+        let totalOtCount = 0;
 
         if (otRow) {
-          let otB = '<tr>';
-          otData.cols.forEach((_, i) => {
-            const cell = otRow.c[i];
-            const val = cell ? (cell.f !== undefined ? cell.f : (cell.v !== null ? cell.v : '')) : '';
-            otB += `<td>${val}</td>`;
-          });
-          otB += '</tr>';
-          otBody.innerHTML = otB;
+          let sNo = 1;
+          for (let i = 5; i < otData.cols.length - 1; i++) {
+            const dateLabel = otData.cols[i].label || `Day ${i - 4}`;
+            const cellVal = otRow.c[i] ? (otRow.c[i].f !== undefined ? otRow.c[i].f : otRow.c[i].v) : '';
+            const numVal = parseFloat(cellVal) || 0;
+            const isOt = numVal > 0;
 
+            otDateHtml += `
+              <tr class="${isOt ? 'has-ot' : ''}">
+                <td>${sNo++}</td>
+                <td><strong>${dateLabel}</strong></td>
+                <td>${cellVal ? `${cellVal} Hrs` : '-'}</td>
+                <td>${isOt ? '<span class="badge-ot">OT Added</span>' : '<span style="color:#94a3b8;">Normal</span>'}</td>
+              </tr>
+            `;
+          }
+          
           const lastCell = otRow.c[otRow.c.length - 1];
-          document.getElementById('cardOT').innerText = `${lastCell ? (lastCell.f || lastCell.v || 0) : 0} Hrs`;
+          totalOtCount = lastCell ? (lastCell.f || lastCell.v || 0) : 0;
         } else {
-          otBody.innerHTML = '<tr><td colspan="100%" style="text-align:center;">No OverTime record found.</td></tr>';
-          document.getElementById('cardOT').innerText = '0 Hrs';
+          otDateHtml = '<tr><td colspan="4" style="text-align:center;">Koi OverTime record nahi mila.</td></tr>';
         }
+        otDateBody.innerHTML = otDateHtml;
+        document.getElementById('cardOT').innerText = `${totalOtCount} Hrs`;
 
-        // Populate Payroll Table & Stats
+        // Build Payroll Summary Table
         const payHead = document.getElementById('payHead');
         const payBody = document.getElementById('payBody');
+        
         let payH = '<tr>';
         payData.cols.forEach(c => { payH += `<th>${c.label || ''}</th>`; });
         payH += '</tr>';
@@ -229,7 +270,7 @@
           document.getElementById('cardFood').innerText = `₹${payRow.c[5] ? (payRow.c[5].v || 0) : 0}`;
           document.getElementById('cardBonus').innerText = `₹${payRow.c[7] ? (payRow.c[7].v || 0) : 0}`;
         } else {
-          payBody.innerHTML = '<tr><td colspan="100%" style="text-align:center;">No Payroll record found.</td></tr>';
+          payBody.innerHTML = '<tr><td colspan="100%" style="text-align:center;">Koi Payroll record nahi mila.</td></tr>';
           document.getElementById('cardNight').innerText = '₹0';
           document.getElementById('cardFood').innerText = '₹0';
           document.getElementById('cardBonus').innerText = '₹0';
@@ -238,19 +279,21 @@
         // Switch View
         document.getElementById('searchBox').style.display = 'none';
         document.getElementById('resultBox').style.display = 'block';
+        document.body.style.alignItems = 'flex-start';
 
       } catch (e) {
         console.error(e);
-        err.innerText = "Error loading data. Google Sheet permissions check karein.";
+        err.innerText = "Data load karne me problem aayi. Sheet check karein.";
         err.style.display = 'block';
       }
-      btn.innerText = 'Search Details';
+      btn.innerText = 'View My Details';
     }
 
     function goBack() {
       document.getElementById('empIdInput').value = '';
       document.getElementById('resultBox').style.display = 'none';
       document.getElementById('searchBox').style.display = 'block';
+      document.body.style.alignItems = 'center';
     }
   </script>
 </body>

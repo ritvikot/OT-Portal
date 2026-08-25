@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OverTime & Payroll Portal</title>
     <style>
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
-        body { background-color: #f1f5f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 16px; }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+        body { background: #f1f5f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 16px; }
         .dashboard-container { background: #ffffff; width: 100%; max-width: 440px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
         .header-banner { background: #1a73e8; color: white; text-align: center; padding: 24px 16px; }
         .header-banner h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
         .header-banner p { font-size: 13px; opacity: 0.9; }
         .content-area { padding: 20px; }
         .login-box { display: flex; flex-direction: column; gap: 12px; }
-        .login-box input { width: 100%; padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; transition: border-color 0.2s; }
+        .login-box input { width: 100%; padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; }
         .login-box input:focus { border-color: #1a73e8; }
         .btn-primary { background: #1a73e8; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
         .btn-primary:hover { background: #1557b0; }
@@ -113,7 +113,6 @@
                 fetchSheetRows(SHEET_2_URL)
             ]);
 
-            // Match ID in any column index (0 or 1)
             const payrollRow = sheet2Rows.find(r => r.some(val => val === inputId));
             const otRow = sheet1Rows.find(r => r.some(val => val === inputId));
 
@@ -125,7 +124,6 @@
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
 
-            // Data Population
             if (payrollRow) {
                 document.getElementById('empName').innerText = payrollRow[1] || 'Associate';
                 document.getElementById('empIdDisplay').innerText = inputId;
@@ -145,7 +143,7 @@
 
         } catch (err) {
             console.error(err);
-            alert("डेटा लोड करने में समस्या आई। Google Sheets की शेयरिंग सेटिंग्स चेक करें।");
+            alert("डेटा लोड करने में समस्या आई।");
         }
     }
 

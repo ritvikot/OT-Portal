@@ -26,7 +26,7 @@
         .profile-info p { font-size: 13px; color: #64748b; font-weight: 500; }
         .btn-logout { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
         
-        /* Navigation Tabs */
+        /* Tabs */
         .tab-nav { display: flex; border-bottom: 1.5px solid #e2e8f0; margin-bottom: 16px; }
         .tab-btn { flex: 1; padding: 10px; background: none; border: none; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; }
         .tab-btn.active { color: #1a73e8; border-bottom-color: #1a73e8; }
@@ -42,7 +42,7 @@
         .remarks-box { background: #fffbeb; border-color: #fef3c7; }
         .remarks-text { font-size: 13px !important; font-weight: 500 !important; color: #92400e !important; }
 
-        /* OverTime Table UI */
+        /* OverTime UI */
         .ot-summary-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px; text-align: center; margin-bottom: 14px; }
         .ot-summary-box span { font-size: 12px; font-weight: 700; color: #1e40af; text-transform: uppercase; }
         .ot-summary-box p { font-size: 24px; font-weight: 800; color: #1e3a8a; margin-top: 4px; }
@@ -53,7 +53,7 @@
         .ot-table td { padding: 9px 14px; border-bottom: 1px solid #f1f5f9; color: #1e293b; }
         .ot-table tr:hover { background: #f8fafc; }
         .ot-badge { background: #dcfce7; color: #15803d; font-weight: 700; padding: 3px 8px; border-radius: 6px; display: inline-block; }
-        .zero-badge { color: #64748b; font-weight: 500; }
+        .zero-badge { color: #94a3b8; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -102,7 +102,9 @@
                                 <th style="text-align: right;">OT Hours</th>
                             </tr>
                         </thead>
-                        <tbody id="otTableBody"></tbody>
+                        <tbody id="otTableBody">
+                            <!-- Populated automatically -->
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -134,35 +136,26 @@
     const SHEET_PAYROLL_ID = '1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0';
     const GID_PAYROLL = '0';
 
-    // JSONP Loader (Bypasses all CORS issues completely)
-    function loadGoogleSheet(sheetId, gid) {
-        return new Promise((resolve, reject) => {
-            const callbackName = 'cb_' + Math.random().toString(36).substring(2, 9);
-            const script = document.createElement('script');
-            script.src = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=responseHandler:${callbackName}&headers=0&gid=${gid}&_=${Date.now()}`;
+    // Sheet 1 Date Columns Mapping (Starting at Index 5 / Column F)
+    const DATE_HEADERS = [
+        "21-August-26", "22-August-26", "23-August-26", "24-August-26",
+        "25-August-26", "26-August-26", "27-August-26", "28-August-26",
+        "29-August-26", "30-August-26", "31-August-26", "1-September-26",
+        "2-September-26", "3-September-26"
+    ];
 
-            window[callbackName] = (data) => {
-                delete window[callbackName];
-                script.remove();
-                if (!data || !data.table || !data.table.rows) {
-                    return resolve([]);
-                }
-                const rows = data.table.rows.map(row => 
-                    (row.c || []).map(cell => {
-                        if (!cell || cell.v === null || cell.v === undefined) return '';
-                        return (cell.f ? cell.f : cell.v).toString().trim();
-                    })
-                );
-                resolve(rows);
-            };
+    async function fetchRawSheetRows(sheetId, gid) {
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq=select%20*&gid=${gid}&_=${Date.now()}`;
+        const res = await fetch(url);
+        const text = await res.text();
+        const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+        const data = JSON.parse(jsonStr);
 
-            script.onerror = () => {
-                delete window[callbackName];
-                script.remove();
-                reject(new Error('Failed to load Google Sheet'));
-            };
-
-            document.body.appendChild(script);
+        return (data.table.rows || []).map(row => {
+            return (row.c || []).map(cell => {
+                if (!cell || cell.v === null || cell.v === undefined) return '';
+                return (cell.f ? cell.f : cell.v).toString().trim();
+            });
         });
     }
 
@@ -176,19 +169,15 @@
         }
 
         try {
-            const [otGrid, payrollGrid] = await Promise.all([
-                loadGoogleSheet(SHEET_OT_ID, GID_OT),
-                loadGoogleSheet(SHEET_PAYROLL_ID, GID_PAYROLL)
+            const [otRows, payrollRows] = await Promise.all([
+                fetchRawSheetRows(SHEET_OT_ID, GID_OT),
+                fetchRawSheetRows(SHEET_PAYROLL_ID, GID_PAYROLL)
             ]);
 
-            const otHeaders = otGrid[0] || [];
-            const otRows = otGrid.slice(1);
-
-            // Sheet 1: Col A (Casper), Col B (Emp id), Col C (Casper)
+            // Match by Col A (Casper), Col B (Emp id), or Col C (Casper)
             const otRow = otRows.find(r => r[0] === inputId || r[1] === inputId || r[2] === inputId);
-
-            // Sheet 2: Col A (ASSOCIATE ID)
-            const payrollRows = payrollGrid.slice(1);
+            
+            // Match by Col A in Payroll Sheet
             const payrollRow = payrollRows.find(r => r[0] === inputId || (otRow && (r[0] === otRow[0] || r[0] === otRow[2])));
 
             if (!otRow && !payrollRow) {
@@ -196,6 +185,7 @@
                 return;
             }
 
+            // Optional Password Check
             if (inputPass && otRow && otRow[1] && otRow[1].toLowerCase() !== inputPass.toLowerCase()) {
                 alert("गलत पासवर्ड / Emp ID!");
                 return;
@@ -204,34 +194,32 @@
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
 
-            // Profile info
+            // Profile Header
             const name = (otRow && otRow[3]) || (payrollRow && payrollRow[1]) || 'Associate';
             const dept = (otRow && otRow[4]) || 'N/A';
             document.getElementById('empName').innerText = name;
             document.getElementById('empIdDisplay').innerText = inputId;
             document.getElementById('empDept').innerText = dept;
 
-            // --- 1. OVERTIME TABLE: DATES FROM COLUMN F (INDEX 5) ---
+            // --- 1. OVERTIME DATE-WISE TABLE POPULATION ---
             const tbody = document.getElementById('otTableBody');
             tbody.innerHTML = '';
             let totalOt = 0;
 
             if (otRow) {
-                for (let col = 5; col < otHeaders.length; col++) {
-                    const dateText = otHeaders[col];
-                    if (!dateText) continue;
-
-                    const rawVal = otRow[col] || '';
+                DATE_HEADERS.forEach((dateLabel, index) => {
+                    const colIdx = 5 + index; // Col F is index 5
+                    const rawVal = otRow[colIdx] || '';
                     const numVal = parseFloat(rawVal) || 0;
                     totalOt += numVal;
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td><strong>${dateText}</strong></td>
+                        <td><strong>${dateLabel}</strong></td>
                         <td style="text-align: right;">${numVal > 0 ? `<span class="ot-badge">${numVal} Hrs</span>` : `<span class="zero-badge">0 Hrs</span>`}</td>
                     `;
                     tbody.appendChild(tr);
-                }
+                });
             } else {
                 tbody.innerHTML = '<tr><td colspan="2" style="text-align:center;color:#94a3b8;padding:16px;">No OT record found</td></tr>';
             }
@@ -253,7 +241,7 @@
             }
 
         } catch (err) {
-            console.error("Sheet Error:", err);
+            console.error("Fetch Error:", err);
             alert("डेटा लोड करने में समस्या आई।");
         }
     }

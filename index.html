@@ -1,130 +1,77 @@
-// Sheet 1 (OverTime Details) & Sheet 2 (Payroll & Allowances) URLs
-const SHEET_1_URL = 'https://docs.google.com/spreadsheets/d/1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0/gviz/tq?tqx=out:csv&gid=552193494';
-const SHEET_2_URL = 'https://docs.google.com/spreadsheets/d/1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0/gviz/tq?tqx=out:csv&gid=0';
+// Google Sheets GViz JSON Endpoints (Data Array फॉर्मेट में)
+const SHEET_1_URL = 'https://docs.google.com/spreadsheets/d/1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0/gviz/tq?tqx=out:json&gid=552193494';
+const SHEET_2_URL = 'https://docs.google.com/spreadsheets/d/1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0/gviz/tq?tqx=out:json&gid=0';
 
-// CSV Parsing Function (Header Spaces और Quotes को Clean करता है)
-function parseCSV(csvText) {
-    const lines = csvText.split('\n').filter(line => line.trim() !== '');
-    if (lines.length < 2) return [];
-
-    const headers = lines[0].split(',').map(h => 
-        h.replace(/^["']|["']$/g, '').trim().toUpperCase()
+// Google Sheet GViz Response को 2D Array में बदलने का फंक्शन
+async function fetchSheetRows(url) {
+    const res = await fetch(`${url}&_=${Date.now()}`);
+    const text = await res.text();
+    // GViz JSON wrapper हटाना: /*O_o*/ google.visualization.Query.setResponse({...});
+    const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+    const data = JSON.parse(jsonStr);
+    
+    // Rows को सादे Array में कन्वर्ट करना
+    return data.table.rows.map(row => 
+        row.c ? row.c.map(cell => (cell && cell.v !== null && cell.v !== undefined) ? cell.v.toString().trim() : '') : []
     );
-
-    return lines.slice(1).map(line => {
-        const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(val => 
-            val ? val.replace(/^["']|["']$/g, '').trim() : ''
-        );
-        const rowObj = {};
-        headers.forEach((header, index) => {
-            rowObj[header] = values[index] || '';
-        });
-        return rowObj;
-    });
 }
 
-// Case-Insensitive Helper: Sheet में किसी भी मिलते-जुलते नाम से वैल्यू निकालना
-function getVal(row, ...possibleKeys) {
-    if (!row) return '';
-    for (const key of possibleKeys) {
-        const cleanKey = key.trim().toUpperCase();
-        if (row[cleanKey] !== undefined && row[cleanKey] !== '') {
-            return row[cleanKey];
-        }
-    }
-    return '';
-}
-
-// 1. Login Function (ASSOCIATE ID से Search)
-async function loginWithAssociateId() {
-    const inputElement = document.getElementById('login-id') || document.getElementById('associateInput');
-    const associateId = inputElement ? inputElement.value.trim() : '';
-
-    if (!associateId) {
+// Login और Exact Mapping Logic
+async function handleLogin() {
+    const inputId = document.getElementById('associateIdInput').value.trim();
+    if (!inputId) {
         alert("कृपया ASSOCIATE ID दर्ज करें!");
         return;
     }
 
     try {
-        // दोनों Sheets से एक साथ डेटा फ़ेच करना (No-Cache के साथ)
-        const [res1, res2] = await Promise.all([
-            fetch(`${SHEET_1_URL}&_=${Date.now()}`),
-            fetch(`${SHEET_2_URL}&_=${Date.now()}`)
+        const [sheet1Rows, sheet2Rows] = await Promise.all([
+            fetchSheetRows(SHEET_1_URL),
+            fetchSheetRows(SHEET_2_URL)
         ]);
 
-        const text1 = await res1.text();
-        const text2 = await res2.text();
+        // Sheet 2 (Payroll) में ID खोजना: Column 0 (A) = ASSOCIATE ID
+        // अगर Sheet में ID किसी और कॉलम में है, तो index (0) बदलें
+        const payrollRow = sheet2Rows.find(r => r[0] === inputId || r[1] === inputId);
 
-        const sheet1Records = parseCSV(text1);
-        const sheet2Records = parseCSV(text2);
+        // Sheet 1 (OverTime) में ID खोजना
+        const otRow = sheet1Rows.find(r => r[0] === inputId || r[1] === inputId);
 
-        // ASSOCIATE ID मैच करना (Sheet 1 और Sheet 2 दोनों में)
-        const otData = sheet1Records.find(row => 
-            getVal(row, 'ASSOCIATE ID', 'ASSOCIATE_ID', 'EMP ID', 'ID') === associateId
-        );
-
-        const payrollData = sheet2Records.find(row => 
-            getVal(row, 'ASSOCIATE ID', 'ASSOCIATE_ID', 'EMP ID', 'ID') === associateId
-        );
-
-        if (!otData && !payrollData) {
-            alert(`ASSOCIATE ID: ${associateId} का डेटा नहीं मिला!`);
+        if (!payrollRow && !otRow) {
+            alert(`ID: ${inputId} का डेटा नहीं मिला! कृपया ID चेक करें।`);
             return;
         }
 
-        // Login View छुपाना और Dashboard View दिखाना
-        if (document.getElementById('login-section')) {
-            document.getElementById('login-section').style.display = 'none';
+        // View Switch
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('dashboardSection').style.display = 'block';
+
+        // --- EXACT COLUMN MAPPING ---
+        // (A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8...)
+
+        if (payrollRow) {
+            // Employee Name & ID
+            document.getElementById('empName').innerText = payrollRow[1] || 'Associate'; // Column B (Name)
+            document.getElementById('empIdDisplay').innerText = inputId;
+
+            // Payroll Cards Mapping (Sheet 2 के Column Order के अनुसार इंडेक्स सेट करें)
+            document.getElementById('nightShift').innerText = '₹' + (payrollRow[2] || '0');      // Column C: Night Shift
+            document.getElementById('foodAllowance').innerText = '₹' + (payrollRow[3] || '0');    // Column D: Food Allowance
+            document.getElementById('activeBonus').innerText = '₹' + (payrollRow[4] || '0');      // Column E: Active Bonus
+            document.getElementById('bShift').innerText = '₹' + (payrollRow[5] || '0');           // Column F: B Shift Incentive
+            document.getElementById('attIncentive').innerText = '₹' + (payrollRow[6] || '0');     // Column G: Att. Incentive
+            document.getElementById('loprDays').innerText = payrollRow[7] || '0';                 // Column H: LOPR Days
+            document.getElementById('pendingAmount').innerText = '₹' + (payrollRow[8] || '0');    // Column I: Pending Amount
         }
-        if (document.getElementById('dashboard-section')) {
-            document.getElementById('dashboard-section').style.display = 'block';
+
+        if (otRow) {
+            // OverTime Cards Mapping (Sheet 1)
+            document.getElementById('otHours').innerText = otRow[2] || '0';   // Column C: OT Hours
+            document.getElementById('otAmount').innerText = '₹' + (otRow[3] || '0'); // Column D: OT Amount
         }
 
-        // डेटा UI पर रेंडर करना
-        renderDashboardData(otData || {}, payrollData || {}, associateId);
-
-    } catch (error) {
-        console.error("Error loading sheets:", error);
-        alert("डेटा लोड करने में समस्या आई। सुनिश्चित करें कि दोनों Sheets 'Anyone with link can view' पर सेट हैं।");
-    }
-}
-
-// 2. Dashboard Rendering Function
-function renderDashboardData(ot, payroll, id) {
-    // User Profile Details
-    const name = getVal(payroll, 'NAME', 'ASSOCIATE NAME') || getVal(ot, 'NAME', 'ASSOCIATE NAME') || 'Employee';
-    setElementText('emp-name', name);
-    setElementText('emp-id', id);
-
-    // Tab 2: Payroll & Allowances Cards (Sheet 2)
-    setElementText('night-shift-val', '₹' + (getVal(payroll, 'NIGHT SHIFT ALLOW.', 'NIGHT SHIFT ALLOW', 'NIGHT SHIFT') || '0'));
-    setElementText('food-allowance-val', '₹' + (getVal(payroll, 'FOOD ALLOWANCE', 'FOOD') || '0'));
-    setElementText('active-bonus-val', '₹' + (getVal(payroll, 'ACTIVE BONUS', 'BONUS') || '0'));
-    setElementText('b-shift-val', '₹' + (getVal(payroll, 'B SHIFT INCENTIVE', 'B SHIFT') || '0'));
-    setElementText('att-incentive-val', '₹' + (getVal(payroll, 'ATT. INCENTIVE', 'ATT INCENTIVE', 'ATTENDANCE') || '0'));
-    setElementText('lopr-days-val', getVal(payroll, 'LOPR DAYS', 'LOPR') || '0');
-    setElementText('pending-amount-val', '₹' + (getVal(payroll, 'PENDING AMOUNT', 'PENDING') || '0'));
-
-    // Tab 1: OverTime Details Cards (Sheet 1)
-    setElementText('ot-hours-val', getVal(ot, 'OT HOURS', 'OVERTIME HOURS', 'TOTAL OT') || '0');
-    setElementText('ot-amount-val', '₹' + (getVal(ot, 'OT AMOUNT', 'OVERTIME AMOUNT', 'TOTAL AMOUNT') || '0'));
-}
-
-// सुरक्षित तरीके से DOM Element का Text अपडेट करने का Helper
-function setElementText(id, value) {
-    const el = document.getElementById(id);
-    if (el) el.innerText = value;
-}
-
-// 3. Logout Function
-function logout() {
-    const inputElement = document.getElementById('login-id') || document.getElementById('associateInput');
-    if (inputElement) inputElement.value = '';
-    
-    if (document.getElementById('dashboard-section')) {
-        document.getElementById('dashboard-section').style.display = 'none';
-    }
-    if (document.getElementById('login-section')) {
-        document.getElementById('login-section').style.display = 'block';
+    } catch (err) {
+        console.error("Data fetch error:", err);
+        alert("डेटा फ़ेच करने में समस्या आई। Console (F12) चेक करें।");
     }
 }

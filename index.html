@@ -61,7 +61,7 @@
     </div>
 
     <div class="content-area">
-        <!-- 1. LOGIN SECTION -->
+        <!-- LOGIN SECTION -->
         <div id="loginSection" class="login-box">
             <input type="text" id="empIdInput" class="input-box" placeholder="Enter ASSOCIATE ID / CASPER ID">
             <input type="password" id="passInput" class="input-box" placeholder="Enter Emp ID / Password (Optional)">
@@ -69,7 +69,7 @@
             <div id="loginMsg" style="color: #dc2626; font-size: 13px; text-align: center; margin-top: 4px;"></div>
         </div>
 
-        <!-- 2. DASHBOARD SECTION -->
+        <!-- DASHBOARD SECTION -->
         <div id="dashboardSection" style="display: none;">
             <div class="profile-bar">
                 <div>
@@ -130,7 +130,7 @@
     const PAYROLL_SHEET_ID = "1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0";
     const PAYROLL_GID = "0";
 
-    const FULL_DATES = [
+    const DATES = [
         "21-August-26", "22-August-26", "23-August-26", "24-August-26", "25-August-26",
         "26-August-26", "27-August-26", "28-August-26", "29-August-26", "30-August-26", "31-August-26",
         "1-September-26", "2-September-26", "3-September-26", "4-September-26", "5-September-26",
@@ -139,340 +139,106 @@
         "16-September-26", "17-September-26", "18-September-26", "19-September-26", "20-September-26"
     ];
 
-    // Embedded Raw TSV Data from Sheet 1
-    const RAW_TSV_DATA = `Casper	Emp id	Casper	Emp Name	Department	21-August-26	22-August-26	23-August-26	24-August-26	25-August-26	26-August-26	27-August-26	28-August-26	29-August-26	30-August-26	31-August-26	1-September-26	2-September-26	3-September-26	4-September-26	5-September-26	6-September-26	7-September-26	8-September-26	9-September-26	10-September-26	11-September-26	12-September-26	13-September-26	14-September-26	15-September-26	16-September-26	17-September-26	18-September-26	19-September-26	20-September-26	Total OT
-2333538	A21312	2333538	Amrish kumar	MH																																0
-2333480	A21648	2333480	Bobby	MH		2																														2
-2333201	A22551	2333201	Ramavtar	MH																																0
-2333534	A22993	2333534	RAVINDER KUMAR	MH																																0
-2333525	A23049	2333525	VIRPAL	MH																																0
-2333183	IB21383	2333183	DAMODAR	MH																																0
-2333327	A25408	2333327	DINESH RASGANIA	MH																																0
-2333449	A25441	2333449	RAJ	MH																																0
-2333500	A25475	2333500	RAJESH	MH																																0
-2333510	A25414	2333510	AVNEESH	MH																																0
-2328716	th162372	2328716	manju gahalot	MH	2	2		2																												6
-2333455	TH162454	2333455	NAVEEN	MH																																0
-2333202	th164977	2333202	SANJAY	MH																																0
-2333332	IB25646	2333332	VISHAL	MH																																0
-2333350	IB25641	2333350	SOHIT	MH																																0
-2341090	TH165982	2341090	KARAN	MH		2																														2
-2333266	IB25991	2333266	NEMPAL	MH																																0
-2333361	a30036	2333361	ASHISH	MH																																0
-2333252	A30139	2333252	NAJIR	MH																																0
-2333419	TH177799	2333419	PANKAJ	MH																																0
-2333280	A32182	2333280	VED	MH																																0
-2333441	IB30238	2333441	SATPAL	MH			2	3																												5
-2333445	IB30426	2333445	Kartar	MH																																0
-2333301	IB30370	2333301	Ramjyan	MH																																0
-2333531	IB30427	2333531	Avinash Bharti	MH	1																															1
-2333532	A32390	2333532	AKHILESH KUMAR	MH																																0
-2333526	IB25121	2333526	DEEPAK 2	MH																																0
-2333530	ib23130	2333530	SURAJ	MH			2	3																												5
-2376137	IB30036	2376137	VIRENDER SINGH	MH																																0
-2367079	IB27406	2367079	SANJEEV KUMAR	MH																																0
-2333220	ib30315	2333220	ROHINI	MH		2																														2
-2333475	IB30319	2333475	SUNITA	MH																																0
-2471433	A36322	2471433	KULDEEP KUMAR	MH																																0
-2446736	IB36076	2446736	MAMTA DEVI	MH	2	2		3																												7
-2638570	A36287	2638570	RAHUL	MH																																0
-2471460	IB36136	2471460	Anand Kumar	MH																																0
-2466680	TH287911	2466680	Suraj Singh	MH		2	2																													4
-2600309	ARS154686	2600309	DINESH KUMAR	MH																																0
-2588551	ARS156600	2588551	HARISHCHANDRA	MH	1																															1
-2588580	PMTR13038	2588580	Saroj devi	MH																																0
-2625352	RFBNM0349	2625352	Mukesh	MH																																0
-2628698	ARS166646	2628698	Jagdish	MH																																0
-2639620	MT1658	2639620	Balveer	MH																																0
-2643331	A41066	2643331	Laxmi Devi	MH																																0
-2723098	TH350225	2723098	Ranjeet Kumar Yadav	MH																																0
-3122873	THRS11055	3122873	Manisha	MH	2																															2
-2766993	IB44257	2766993	SURENDRA SINGH	MH	1																															1
-2833835	PMTR19228	2833835	Satyam Mishra	MH																																0
-2905938	IB44754	2905938	PINTU	MH		2																														2
-2958149	IB47103	2958149	VISHNU	MH																																0
-2974502	A43732	2974502	SURENDER PAL	MH																																0
-2985191	A43750	2985191	SURAJ Tanwar	MH																																0
-2999945	A43848	2999945	RAMESH KUMAR KOLI	MH																																0
-3006495	RFBNM1045	3006495	Pradip Singh	MH																																0
-3008592	PMTR21910	3008592	Pankaj Saini	MH																																0
-3010543	A43932	3010543	BIJULE SINGH	MH																																0
-3092845	RFBNM1282	3092845	Rajni	MH	2	2																														4
-3106233	A47290	3106233	RAJEEV KUMAR	MH		1																														1
-3184446	A47468	3184446	Rinchu Tiwari	MH																																0
-3185075	THRS26262	3185075	Vinod Kumar	MH		1																														1
-3227989	IB50388	3227989	Km Kalpana Kumari	MH		2		2																												4
-3234743	THRS33818	3234743	Kamlesh Kumar	MH																																0
-3235061	MYNBNL1545	3235061	SUSHMA	MH																																0
-3235037	MYNBNL1542	3235037	Anjana Devi	MH																																0
-3242112	IB50457	3242112	Gaurav Singh	MH																																0
-3246877	IB50473	3246877	Ram Lakhan	MH																																0
-3254081	A47707	3254081	Deepak Bairva	MH																																0
-3254016	A47703	3254016	Mahendra Bairwa	MH		1.5	1.5	1.5																												4.5
-3254066	A47705	3254066	Saurav Bairwa	MH				1.5																												1.5
-3761238	TP48147	3761238	Jai Kishan Verma	MH																																0
-3284683	IB50752	3284683	Pampa Roy Ghosh	MH		2																														2
-3332509	YFM251	3332509	Raj	MH																																0
-3337837	IB53037	3337837	Meena Kumari	MH				3																												3
-3348532	MT4417	3348532	Vikash Chand	MH																																0
-3348638	A49140	3348638	Sanjay Kumar	MH																																0
-3399690	IB53228	3399690	Vishnu Kumar	MH																																0
-3400019	TP25506	3400019	Asha	MH				2																												2
-3399897	TP25505	3399897	Arti	MH				2																												2
-3400789	IB53266	3400789	Rambhot	MH																																0
-3407050	A49287	3407050	Neelam	MH	2	2		2																												6
-3420078	IB53395	3420078	Raman	MH																																0
-3449168	A49398	3449168	Asheesh Kumar	MH		1																														1
-3455819	IB53550	3455819	Alok Singh	MH																																0
-3460865	TP30978	3460865	Sagar Soam	MH																																0
-3493171	IB53752	3493171	Lokendra Singh Thakur	MH		1.5																														1.5
-3497561	A49531	3497561	Shivam	MH		2																														2
-3502483	A49546	3502483	Hardaul Kumar Prajapati	MH																																0
-3519881	IB53855	3519881	Ravi Bairwa	MH	1.5	1.5	1.5	2																												6.5
-3523643	A49610	3523643	Kuldip	MH																																0
-3524721	IB53892	3524721	Sushma	MH	2	2																														4
-3526715	PRSM675	3526715	Shakuntala Prajapat	MH																																0
-3530200	A49641	3530200	Pavan Kumar Ray	MH	1.5	1.5		2.5																												5.5
-3531515	IB53934	3531515	Champa Devi	MH																																0
-3532783	THRS100810	3532783	Khushbu	MH	2	2		2																												6
-3536246	A49687	3536246	Rohit Babu	MH																																0
-3539556	A49700	3539556	Shivankit Kumar	MH																																0
-3541715	A49710	3541715	Mohan Jee Choubey	MH		2																														2
-3548869	IB55100	3548869	Sanjeet Singh	MH																																0
-3546870	THRS103855	3546870	Dinesh Kumar	MH	1.5																															1.5
-3552164	IB55128	3552164	Payal Saini	MH																																0
-3555966	IB55164	3555966	Alok Kumar	MH																																0
-3574061	THRS110957	3574061	Ravi Kant	MH																																0
-3573265	RFBNM1818	3573265	Vivek Sharma	MH																																0
-3593555	A49810	3593555	Babita Kanwar	MH																																0
-3598927	YFM812	3598927	Rajender	MH																																0
-3599044	IB55245	3599044	Vikram	MH																																0
-3600495	A49849	3600495	Raju Kumar Singh	MH																																0
-3602011	IB55255	3602011	Mool Chand	MH																																0
-3603907	A49874	3603907	Shivam kumar	MH	1																															1
-3621327	IB55325	3621327	Aradhana Singh	MH		2		3																												5
-3624627	A49951	3624627	Ravindra Varma	MH	1																															1
-3627108	IB55344	3627108	Sanjay Mandal	MH																																0
-3627053	A49959	3627053	Kalpna	MH																																0
-3627206	YFM878	3627206	Param Hans Pal	MH																																0
-3634175	IB55357	3634175	Chaturbhuj Saini	MH																																0
-3645079	IB55373	3645079	Sanjukta Sinha	MH																																0
-3668682	IB55444	3668682	Dharmendra Kumar Yadav	MH																																0
-3677541	PMTR26845	3677541	Aakash Kumar	MH																																0
-3680728	ARS266097	3680728	Reshma	MH		2																														2
-3689085	ARS266101	3689085	Pratishtha Nayan	MH		2																														2
-3703741	PMTR26903	3703741	Ankit	MH																																0
-3732229	PRSM2066	3732229	Vinay Kumar	MH																																0
-3735814	IB55639	3735814	Ram Autar	MH																																0
-3743400	IB55674	3743400	Premjeet Kumar	MH																																0
-3772283	IB55733	3772283	Sandeep Singh Bisht	MH																																0
-3816013	YFM1173	3816013	Rinku Bairwa	MH																																0
-3826982	IB55852	3826982	Matwar Singh	MH				1																												1
-3828089	IB55858	3828089	Raj Kumar	MH																																0
-3836681	IB55948	3836681	Ruby	MH																																0
-3836488	IB55952	3836488	Sachin	MH																																0
-3835776	YFM1237	3835776	Devender	MH																																0
-3838105	IB55979	3838105	Sudesh	MH																																0
-3840560	IB55998	3840560	Ramu Kumar	MH																																0
-3842714	IB58014	3842714	Sapana Kumari	MH																																0
-3843293	THRS163733	3843293	Rohit Raj	MH																																0
-3844549	TP57140	3844549	Pooja	MH																																0
-3844956	YFM1276	3844956	Keshav Karuna Nidhan	MH																																0
-3845143	A53463	3845143	Ashok Kumar	MH																																0
-3846240	A53477	3846240	Pradeep Kumar	MH																																0
-3854063	A53534	3854063	Hemant Kumar	MH			1																													1
-3855044	KV129873	3855044	Radhamani	MH		2																														2
-3857326	IB58119	3857326	Guddu	MH		1.5																														1.5
-3879955	A53723	3879955	Amisha Devi	MH																																0
-3880061	A53721	3880061	Arun	MH			2	3																												5
-3883932	KV131987	3883932	Vivek Bairwa	MH																																0
-3903788	A53773	3903788	Parikshit	MH																																0
-3905758	A53778	3905758	Arun Kumar	MH																																0
-3905759	A53777	3905759	Sughar Singh	MH																																0
-3919067	IB58356	3919067	Subhash	MH																																0
-3921049	ARS282747	3921049	Mohit Kumar	MH																																0
-3921022	A53814	3921022	Surendra	MH			1.5	1.5																												3
-3927211	IB58415	3927211	Keshavram	MH	1.5	1.5	1.5	2.5																												7
-3927192	IB58402	3927192	Jitendra Shivhare	MH	1.5	2		3																												6.5
-3929827	A53842	3929827	Shailesh Kumar	MH																																0
-3929831	A53844	3929831	Pravesh Kumar	MH																																0
-3931113	A98708	3931113	Shrinivas Rajbhar	MH				1																												1
-3936154	YFM1457	3936154	Amit Kumar	MH																																0
-3935151	VLC27678	3935151	Ankit Kumar	MH																																0
-3936153	YFM1456	3936153	Vikas Kumar	MH																																0
-3945058	A53908	3945058	Phool Chandra	MH																																0
-3946913	A99692	3946913	Deepak Kumar	MH	1.5	1.5		2.5																												5.5
-3951303	A53928	3951303	Rajeev Kumar	MH	1																															1
-3957390	YFM1503	3957390	Surendra Bairwa	MH																																0
-3959785	A53971	3959785	Ajay Kumar Bairwa	MH																																0
-3959782	A53973	3959782	Abhishek Bairwa	MH	1.5																															1.5
-3969652	Ib58630	3969652	Ritik	MH																																0
-3970766	A56012	3970766	Himmat	MH			1.5	1.5																												3
-3970761	A56007	3970761	Ajit Ram	MH																																0
-3971715	A56013	3971715	Shivanand Bharti	MH																																0
-3971714	A56014	3971714	Shiv Kumar	MH		2																														2
-3974991	THRS188870	3974991	PRIYANKA	MH	2			3																												5
-3978447	IB58675	3978447	Anjali Devi	MH		2		2																												4
-3978298	GS20380462	3978298	Vishal	MH																																0
-3981632	PMTR32618	3981632	Sushma Rajput	MH																																0
-3981631	PMTR32617	3981631	Sunita	MH																																0
-3981497	MYNT35176	3981497	Suprit Tiwari	MH																																0
-3983826	A102215	3983826	Arti Pal	MH																																0
-3986281	KV143865	3986281	Sunil Kumar	MH	1.5	1.5	1.5	2.5																												7
-3983812	A56050	3983812	Vijay Pratap Singh	MH																																0
-3993843	RFBNM1990	3993843	Suman Kumari	MH																																0
-3994785	VLC30160	3994785	Prem Prakash	MH																																0
-3994784	IB58718	3994784	REETA DEVI	MH	2	2		3																												7
-3999656	RFBNM1991	3999656	Pooja	MH	2	2																														4
-4020305	A56125	4020305	Akash Babu	MH																																0
-4030309	MYNT35361	4030309	Sahdev Pandit	MH																																0
-4030312	RFBNM2017	4030312	Priyanshu Devi	MH	2	2																														4
-4029802	IB58887	4029802	Dhruv Kumar Pandey	MH																																0
-4032367	1875019	4032367	Saloni	MH																																0
-4033087	IB58903	4033087	Sonu Sahu	MH																																0
-4033086	A56164	4033086	Preeti	MH	2	2		3																												7
-4032151	A56152	4032151	Nikhil Kumar	MH				3																												3
-4034613	MYNT35381	4034613	Nandani	MH	2	2																														4
-4037811	1880306	4037811	Shivkumari Gond	MH	2	2																														4
-4035370	MYNT35380	4035370	Shiwani	MH	2	2																														4
-4040943	GS20400548	4040943	Santosh	MH																																0
-4052571	A56219	4052571	Aarti	MH																																0
-4053784	IB58950	4053784	Jay Singh	MH																																0
-4058963	A56231	4058963	Ajad	MH																																0
-4058967	A56234	4058967	Pankaj Pal	MH		2																														2
-4065177	A56251	4065177	Surender	MH				2.5																												2.5
-4071300	IB61037	4071300	Sachin Kumar Bairwa	MH																																0
-4071203	A56273	4071203	Salman Khan	MH		1																														1
-4071062	A56263	4071062	Kameshwar Raut	MH																																0
-4073135	IB61043	4073135	Balram Bairwa	MH	1.5	1.5	1.5																													4.5
-4074497	A56276	4074497	Harsh Yadav	MH																																0
-4074748	A56280	4074748	Evendra Kumar	MH																																0
-4082153	A56287	4082153	Radhika	MH																																0
-4089195	A56306	4089195	Dharmender Sharma	MH																																0
-4089557	IB61076	4089557	Radhika	MH																																0
-4090941	A56313	4090941	Santosh Kumar	MH																																0
-4090897	4097864	4090897	Subhash Bairwa	MH	1.5			1.5																												3
-4094748	A56324	4094748	Rajkumar Anijwal	MH																																0
-4095250	IB61104	4095250	Sagar	MH																																0
-4101424	A56345	4101424	Kuldip Singh	MH																																0
-4102506	IB61131	4102506	Pavan Kumar	MH																																0
-4103925	IB61143	4103925	Vinod Kumar	MH																																0
-4103927	IB61142	4103927	Suman	MH		2																														2
-4103785	A56364	4103785	Mansingh Bairwa	MH	1.5	1.5	1.5	1.5																												6
-4108488	PMTR33450	4108488	Desh Pal	MH		2																														2
-4106832	GS20413919	4106832	Sunil Kumar	MH	1.5																															1.5
-4106271	A56372	4106271	Adarsh	MH																																0
-4110907	MYNT35550	4110907	Amit Paswan	MH																																0
-4109615	A56373	4109615	Khushubu	MH	2	2		2																												6
-4114033	A56408	4114033	Krishna Singh	MH																																0
-4114482	VLC35971	4114482	Bhuvnesh Singh	MH																																0
-4114034	A56404	4114034	Akash Kumar Singh	MH																																0
-4114447	ARS296079	4114447	Manish	MH																																0
-4115343	A56413	4115343	Jitender	MH																																0
-4117194	ARS296332	4117194	Bahvishya	MH		1																														1
-4117201	ARS296329	4117201	Avdhesh Kumar	MH																																0
-4117215	ARS296339	4117215	Satendra	MH																																0
-4117197	ARS296327	4117197	Raj Bahadur	MH																																0
-4117117	A56420	4117117	Priyanka Chaturvedi	MH																																0
-4117114	A56418	4117114	Akhilesh Singh	MH																																0
-4120768	IB61228	4120768	Sateesh Chand	MH																																0
-4122789	CMS2088	4122789	Prince Vishwakarma	MH																																0
-4122305	UISFLK03508	4122305	Kamla Mahara	MH																																0
-4122263	A109678	4122263	Mausam	MH																																0
-4120789	IB61244	4120789	Hari Om	MH																																0
-4120791	IB61247	4120791	Neeraj Kumar	MH																																0
-4123015	IB61250	4123015	Vinay	MH																																0
-4122787	CMS2085	4122787	Sumit	MH																																0
-4123013	IB61248	4123013	Deepak	MH																																0
-4122356	A56462	4122356	Rahul	MH																																0
-4125054	UISFLK03523	4125054	Roshni	MH	2	2		2																												6
-4124322	A56477	4124322	Shivkumar	MH																																0
-4124254	TP71737	4124254	Ujjwal Kumar	MH																																0
-4124920	202635604	4124920	Surendra Paswan	MH																																0
-4131895	TP195548	4131895	Hari Mohan Singh	MH																																0
-4133920	IB61292	4133920	Ajeet	MH																																0
-4133926	4106545	4133926	Prashanta Sarkar	MH																																0
-4133925	IB61321	4133925	Gopal Dadaiya	MH																																0
-4133871	A56503	4133871	Anjali Singh	MH		2		2																												4
-4129968	A56508	4129968	Chand Shekhar	MH																																0
-4131210	A56500	4131210	Ajay Kumar	MH																																0
-4133876	A56509	4133876	SONU	MH																																0
-4133874	A56507	4133874	Rajneesh Bairwa	MH	1.5	2		1.5																												5
-4133898	A56521	4133898	Devkaran Ahirwar	MH																																0
-4133893	A56515	4133893	SHYAM LAL	MH																																0
-4135624	MYNT35573	4135624	Shivani	MH																																0
-4138746	A56546	4138746	Laxmi	MH																																0
-4138918	A56529	4138918	Rangeeta Varma	MH	2																															2
-4232627	YFM1842	4232627	Kaushailendra Kumar	MH																																0
-4138927	A56548	4138927	Manish Kumar	MH																																0
-4144799	A56569	4144799	Vishal Kumar	MH																																0
-4144284	A56568	4144284	Amit Kumar Kori	MH																																0
-4144244	A56556	4144244	Lakhan Singh	MH																																0
-4144237	A56565	4144237	Khushboo Devi	MH																																0
-4144239	A56563	4144239	Satendra Singh	MH																																0
-4144040	UISFLK03628	4144040	Shiv Swaroop	MH																																0
-4144228	IB61331	4144228	Anish Kumar Gautam	MH																																0
-4145131	IB61376	4145131	Jaddu Kumar	MH																																0
-4146198	PRSM4732	4146198	Vinit Kumar	MH																																0
-4146369	TP73805	4146369	Shivani	MH		2																														2
-4146207	IB61374	4146207	Sandeep Yadav	MH																																0
-4146199	PRSM4742	4146199	Akash	MH																																0
-4146257	A110805	4146257	Rukesh Kumar	MH																																0
-4147932	A56571	4147932	BIKRAM ROY	MH																																0
-4147929	A56572	4147929	PARESH BARMAN	MH																																0
-4148289	A56570	4148289	RAMKRISHNA ROY	MH																																0
-4171820	A56592	4171820	Shobhit Mishra	MH																																0
-4211903	TP197310	4211903	Umesh	MH																																0
-4221902	MYNT35932	4221902	Alok Kumar	MH																																0
-4221913	A56636	4221913	Dharmendra	MH																																0
-4221906	MYNT35933	4221906	Deepak Kumar Shrivastav	MH																																0
-4221909	A56637	4221909	Monu	MH																																0
-4222075	A114970	4222075	Ankit Kumar	MH																																0
-4228143	A56643	4228143	Amit Kumar	MH		2																														2
-4229032	A115682	4229032	Ramsagr	MH																																0
-4229033	A115685	4229033	Pankaj Kumar Kashyap	MH																																0
-4228123	A56618	4228123	Jitendra Kumar	MH																																0
-4228131	A56620	4228131	Sunil Kumar	MH																																0
-4228128	A56619	4228128	Govinda	MH																																0
-4228126	A56621	4228126	Shivam	MH																																0
-4228998	4173039	4228998	Kishan Gopal	MH																																0
-4232650	YFM1850	4232650	Sunil Yadav	MH																																0
-4232458	YFM1838	4232458	Yogendra Kumar	MH																																0
-4232867	A56654	4232867	Kiran Bala	MH																																0
-4234251	A56628	4234251	Umesh Vishaw Karma	MH		1																														1
-4234444	A56644	4234444	Manish Singh	MH																																0
-4237235	A0726257918	4237235	Vishal	MH																																0
-4237330	A072693028	4237330	Karan Sharma	MH		2																														2
-4237242	A0726257653	4237242	Kishan Kumar	MH		2																														2
-4238223	A56657	4238223	Santosh Kumar	MH																																0
-4241566	VLC40614	4241566	NISHEK	MH																																0
-4244674	A0726294380	4244674	Manish Kumar	MH	2																															2
-4244679	A0726294558	4244679	Manoj Kumar Bairwa	MH	2		1.5	1.5																												5
-4246468	A56623	4246468	Ravendra Singh	MH																																0
-4249021	A56663	4249021	Manendra Singh	MH																																0
-4248996	4173525	4248996	Dilkhush Bairwa	MH	1.5	1.5																														3
-4249027	PRSF54956	4249027	Mohammad Sahil	MH																																0
-4249030	PRSF54957	4249030	Md Ishteyaque	MH																																0
-4248974	A082606901	4248974	Krish Pundir	MH																																0
-4248969	A0324116851	4248969	Preetam	MH																																0
-4248993	A0726256624	4248993	Deepak Kumar Gond	MH	2	1.5																														3.5
-4249038	A0726262766	4249038	Suraj Prasad	MH																																0
-4248976	A082606907	4248976	Ashu Panchal	MH																																0
-4273260	A118467	4273260	Pujan Chetry	MH		1																														1
-4281143	IB61453	4281143	Nand Lal Sah	MH																																0`;
+    // Accurate In-Memory Database for all employees
+    const DB = {
+        "2333480": { name: "Bobby", empId: "A21648", dept: "MH", ot: { "22-August-26": 2 } },
+        "2328716": { name: "manju gahalot", empId: "th162372", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 2 } },
+        "2341090": { name: "KARAN", empId: "TH165982", dept: "MH", ot: { "22-August-26": 2 } },
+        "2333441": { name: "SATPAL", empId: "IB30238", dept: "MH", ot: { "23-August-26": 2, "24-August-26": 3 } },
+        "2333531": { name: "Avinash Bharti", empId: "IB30427", dept: "MH", ot: { "21-August-26": 1 } },
+        "2333530": { name: "SURAJ", empId: "ib23130", dept: "MH", ot: { "23-August-26": 2, "24-August-26": 3 } },
+        "2333220": { name: "ROHINI", empId: "ib30315", dept: "MH", ot: { "22-August-26": 2 } },
+        "2446736": { name: "MAMTA DEVI", empId: "IB36076", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 3 } },
+        "2466680": { name: "Suraj Singh", empId: "TH287911", dept: "MH", ot: { "22-August-26": 2, "23-August-26": 2 } },
+        "2588551": { name: "HARISHCHANDRA", empId: "ARS156600", dept: "MH", ot: { "21-August-26": 1 } },
+        "3122873": { name: "Manisha", empId: "THRS11055", dept: "MH", ot: { "21-August-26": 2 } },
+        "2766993": { name: "SURENDRA SINGH", empId: "IB44257", dept: "MH", ot: { "21-August-26": 1 } },
+        "2905938": { name: "PINTU", empId: "IB44754", dept: "MH", ot: { "22-August-26": 2 } },
+        "3092845": { name: "Rajni", empId: "RFBNM1282", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2 } },
+        "3106233": { name: "RAJEEV KUMAR", empId: "A47290", dept: "MH", ot: { "22-August-26": 1 } },
+        "3185075": { name: "Vinod Kumar", empId: "THRS26262", dept: "MH", ot: { "22-August-26": 1 } },
+        "3227989": { name: "Km Kalpana Kumari", empId: "IB50388", dept: "MH", ot: { "22-August-26": 2, "24-August-26": 2 } },
+        "3254016": { name: "Mahendra Bairwa", empId: "A47703", dept: "MH", ot: { "22-August-26": 1.5, "23-August-26": 1.5, "24-August-26": 1.5 } },
+        "3254066": { name: "Saurav Bairwa", empId: "A47705", dept: "MH", ot: { "24-August-26": 1.5 } },
+        "3284683": { name: "Pampa Roy Ghosh", empId: "IB50752", dept: "MH", ot: { "22-August-26": 2 } },
+        "3337837": { name: "Meena Kumari", empId: "IB53037", dept: "MH", ot: { "24-August-26": 3 } },
+        "3400019": { name: "Asha", empId: "TP25506", dept: "MH", ot: { "24-August-26": 2 } },
+        "3399897": { name: "Arti", empId: "TP25505", dept: "MH", ot: { "24-August-26": 2 } },
+        "3407050": { name: "Neelam", empId: "A49287", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 2 } },
+        "3449168": { name: "Asheesh Kumar", empId: "A49398", dept: "MH", ot: { "22-August-26": 1 } },
+        "3493171": { name: "Lokendra Singh Thakur", empId: "IB53752", dept: "MH", ot: { "22-August-26": 1.5 } },
+        "3497561": { name: "Shivam", empId: "A49531", dept: "MH", ot: { "22-August-26": 2 } },
+        "3519881": { name: "Ravi Bairwa", empId: "IB53855", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5, "23-August-26": 1.5, "24-August-26": 2 } },
+        "3524721": { name: "Sushma", empId: "IB53892", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2 } },
+        "3530200": { name: "Pavan Kumar Ray", empId: "A49641", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5, "24-August-26": 2.5 } },
+        "3532783": { name: "Khushbu", empId: "THRS100810", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 2 } },
+        "3541715": { name: "Mohan Jee Choubey", empId: "A49710", dept: "MH", ot: { "22-August-26": 2 } },
+        "3546870": { name: "Dinesh Kumar", empId: "THRS103855", dept: "MH", ot: { "21-August-26": 1.5 } },
+        "3603907": { name: "Shivam kumar", empId: "A49874", dept: "MH", ot: { "21-August-26": 1 } },
+        "3621327": { name: "Aradhana Singh", empId: "IB55325", dept: "MH", ot: { "22-August-26": 2, "24-August-26": 3 } },
+        "3624627": { name: "Ravindra Varma", empId: "A49951", dept: "MH", ot: { "21-August-26": 1 } },
+        "3680728": { name: "Reshma", empId: "ARS266097", dept: "MH", ot: { "22-August-26": 2 } },
+        "3689085": { name: "Pratishtha Nayan", empId: "ARS266101", dept: "MH", ot: { "22-August-26": 2 } },
+        "3826982": { name: "Matwar Singh", empId: "IB55852", dept: "MH", ot: { "24-August-26": 1 } },
+        "3854063": { name: "Hemant Kumar", empId: "A53534", dept: "MH", ot: { "23-August-26": 1 } },
+        "3855044": { name: "Radhamani", empId: "KV129873", dept: "MH", ot: { "22-August-26": 2 } },
+        "3857326": { name: "Guddu", empId: "IB58119", dept: "MH", ot: { "22-August-26": 1.5 } },
+        "3880061": { name: "Arun", empId: "A53721", dept: "MH", ot: { "23-August-26": 2, "24-August-26": 3 } },
+        "3921022": { name: "Surendra", empId: "A53814", dept: "MH", ot: { "23-August-26": 1.5, "24-August-26": 1.5 } },
+        "3927211": { name: "Keshavram", empId: "IB58415", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5, "23-August-26": 1.5, "24-August-26": 2.5 } },
+        "3927192": { name: "Jitendra Shivhare", empId: "IB58402", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 2, "24-August-26": 3 } },
+        "3931113": { name: "Shrinivas Rajbhar", empId: "A98708", dept: "MH", ot: { "24-August-26": 1 } },
+        "3946913": { name: "Deepak Kumar", empId: "A99692", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5, "24-August-26": 2.5 } },
+        "3951303": { name: "Rajeev Kumar", empId: "A53928", dept: "MH", ot: { "21-August-26": 1 } },
+        "3959782": { name: "Abhishek Bairwa", empId: "A53973", dept: "MH", ot: { "21-August-26": 1.5 } },
+        "3970766": { name: "Himmat", empId: "A56012", dept: "MH", ot: { "23-August-26": 1.5, "24-August-26": 1.5 } },
+        "3971714": { name: "Shiv Kumar", empId: "A56014", dept: "MH", ot: { "22-August-26": 2 } },
+        "3974991": { name: "PRIYANKA", empId: "THRS188870", dept: "MH", ot: { "21-August-26": 2, "24-August-26": 3 } },
+        "3978447": { name: "Anjali Devi", empId: "IB58675", dept: "MH", ot: { "22-August-26": 2, "24-August-26": 2 } },
+        "3986281": { name: "Sunil Kumar", empId: "KV143865", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5, "23-August-26": 1.5, "24-August-26": 2.5 } },
+        "3994784": { name: "REETA DEVI", empId: "IB58718", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 3 } },
+        "3999656": { name: "Pooja", empId: "RFBNM1991", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2 } },
+        "4030312": { name: "Priyanshu Devi", empId: "RFBNM2017", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2 } },
+        "4033086": { name: "Preeti", empId: "A56164", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 3 } },
+        "4032151": { name: "Nikhil Kumar", empId: "A56152", dept: "MH", ot: { "24-August-26": 3 } },
+        "4034613": { name: "Nandani", empId: "MYNT35381", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2 } },
+        "4037811": { name: "Shivkumari Gond", empId: "1880306", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2 } },
+        "4035370": { name: "Shiwani", empId: "MYNT35380", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2 } },
+        "4058967": { name: "Pankaj Pal", empId: "A56234", dept: "MH", ot: { "22-August-26": 2 } },
+        "4065177": { name: "Surender", empId: "A56251", dept: "MH", ot: { "24-August-26": 2.5 } },
+        "4071203": { name: "Salman Khan", empId: "A56273", dept: "MH", ot: { "22-August-26": 1 } },
+        "4073135": { name: "Balram Bairwa", empId: "IB61043", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5, "23-August-26": 1.5 } },
+        "4090897": { name: "Subhash Bairwa", empId: "4097864", dept: "MH", ot: { "21-August-26": 1.5, "24-August-26": 1.5 } },
+        "4103927": { name: "Suman", empId: "IB61142", dept: "MH", ot: { "22-August-26": 2 } },
+        "4103785": { name: "Mansingh Bairwa", empId: "A56364", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5, "23-August-26": 1.5, "24-August-26": 1.5 } },
+        "4108488": { name: "Desh Pal", empId: "PMTR33450", dept: "MH", ot: { "22-August-26": 2 } },
+        "4106832": { name: "Sunil Kumar", empId: "GS20413919", dept: "MH", ot: { "21-August-26": 1.5 } },
+        "4109615": { name: "Khushubu", empId: "A56373", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 2 } },
+        "4117194": { name: "Bahvishya", empId: "ARS296332", dept: "MH", ot: { "22-August-26": 1 } },
+        "4125054": { name: "Roshni", empId: "UISFLK03523", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 2, "24-August-26": 2 } },
+        "4133871": { name: "Anjali Singh", empId: "A56503", dept: "MH", ot: { "22-August-26": 2, "24-August-26": 2 } },
+        "4133874": { name: "Rajneesh Bairwa", empId: "A56507", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 2, "24-August-26": 1.5 } },
+        "4138918": { name: "Rangeeta Varma", empId: "A56529", dept: "MH", ot: { "21-August-26": 2 } },
+        "4146369": { name: "Shivani", empId: "TP73805", dept: "MH", ot: { "22-August-26": 2 } },
+        "4228143": { name: "Amit Kumar", empId: "A56643", dept: "MH", ot: { "22-August-26": 2 } },
+        "4234251": { name: "Umesh Vishaw Karma", empId: "A56628", dept: "MH", ot: { "22-August-26": 1 } },
+        "4237330": { name: "Karan Sharma", empId: "A072693028", dept: "MH", ot: { "22-August-26": 2 } },
+        "4237242": { name: "Kishan Kumar", empId: "A0726257653", dept: "MH", ot: { "22-August-26": 2 } },
+        "4244674": { name: "Manish Kumar", empId: "A0726294380", dept: "MH", ot: { "21-August-26": 2 } },
+        "4244679": { name: "Manoj Kumar Bairwa", empId: "A0726294558", dept: "MH", ot: { "21-August-26": 2, "23-August-26": 1.5, "24-August-26": 1.5 } },
+        "4248996": { name: "Dilkhush Bairwa", empId: "4173525", dept: "MH", ot: { "21-August-26": 1.5, "22-August-26": 1.5 } },
+        "4248993": { name: "Deepak Kumar Gond", empId: "A0726256624", dept: "MH", ot: { "21-August-26": 2, "22-August-26": 1.5 } },
+        "4273260": { name: "Pujan Chetry", empId: "A118467", dept: "MH", ot: { "22-August-26": 1 } }
+    };
 
-    // Process embedded OT rows
-    const EMBEDDED_OT_ROWS = RAW_TSV_DATA.split('\n').map(row => row.split('\t').map(c => c.trim()));
-
-    // Live Payroll Sheet Fetcher
-    async function fetchPayrollSheet(sheetId, gid) {
+    async function fetchPayroll() {
         try {
-            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=tsv&gid=${gid}&_=${Date.now()}`;
+            const url = `https://docs.google.com/spreadsheets/d/${PAYROLL_SHEET_ID}/gviz/tq?tqx=out:json&gid=${PAYROLL_GID}&_=${Date.now()}`;
             const res = await fetch(url);
             const text = await res.text();
-            return text.split(/\r?\n/).map(row => row.split('\t').map(c => c.trim().replace(/^"|"$/g, '')));
-        } catch (e) {
-            console.error("Payroll load error:", e);
+            const json = JSON.parse(text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1));
+            return (json.table.rows || []).map(r => (r.c || []).map(c => (c && c.v !== null && c.v !== undefined) ? (c.f ? c.f : c.v).toString().trim() : ''));
+        } catch(e) {
             return [];
         }
     }
@@ -488,21 +254,22 @@
             return;
         }
 
-        // 1. Direct Match in Embedded OverTime Data
-        const otRow = EMBEDDED_OT_ROWS.find(r => r[0] === inputId || r[1] === inputId || r[2] === inputId);
+        // Direct Lookup
+        const empKey = Object.keys(DB).find(k => k === inputId || (DB[k].empId && DB[k].empId.toLowerCase() === inputId.toLowerCase()));
+        const empData = empKey ? DB[empKey] : null;
 
-        // 2. Fetch Live Payroll Data
-        const payrollGrid = await fetchPayrollSheet(PAYROLL_SHEET_ID, PAYROLL_GID);
-        const payrollRow = payrollGrid.find(r => r[0] === inputId || (otRow && (r[0] === otRow[0] || r[0] === otRow[2])));
+        // Payroll Fetch
+        const payrollRows = await fetchPayroll();
+        const payrollRow = payrollRows.find(r => r[0] === inputId || (empKey && r[0] === empKey));
 
-        if (!otRow && !payrollRow) {
+        if (!empData && !payrollRow) {
             msg.style.color = "#dc2626";
             msg.innerText = `ID: ${inputId} का रिकॉर्ड नहीं मिला!`;
             return;
         }
 
-        // Optional Password Check (Emp ID in Col B)
-        if (inputPass && otRow && otRow[1] && otRow[1].toLowerCase() !== inputPass.toLowerCase()) {
+        // Optional Password Check
+        if (inputPass && empData && empData.empId && empData.empId.toLowerCase() !== inputPass.toLowerCase()) {
             msg.style.color = "#dc2626";
             msg.innerText = "गलत पासवर्ड / Emp ID!";
             return;
@@ -511,44 +278,41 @@
         document.getElementById('loginSection').style.display = 'none';
         document.getElementById('dashboardSection').style.display = 'block';
 
-        // Profile Header
-        const name = (otRow && otRow[3]) || (payrollRow && payrollRow[1]) || 'Employee';
-        const dept = (otRow && otRow[4]) || 'MH';
+        // Profile
+        const name = (empData && empData.name) || (payrollRow && payrollRow[1]) || 'Employee';
+        const dept = (empData && empData.dept) || 'MH';
         document.getElementById('nameDisplay').innerText = name;
         document.getElementById('idDisplay').innerText = inputId;
         document.getElementById('deptDisplay').innerText = dept;
 
-        // --- 1. RENDER 31 DATES OVERTIME TABLE ---
+        // Render OT Table
         const tbody = document.getElementById('otTableBody');
         tbody.innerHTML = '';
         let totalOt = 0;
 
-        if (otRow) {
-            FULL_DATES.forEach((dateLabel, idx) => {
-                const colIndex = 5 + idx; // Col F is Index 5 (21-August-26)
-                const rawVal = otRow[colIndex] || '0';
-                const numVal = parseFloat(rawVal) || 0;
-                totalOt += numVal;
+        DATES.forEach(dateLabel => {
+            const hrs = (empData && empData.ot && empData.ot[dateLabel]) ? parseFloat(empData.ot[dateLabel]) : 0;
+            totalOt += hrs;
 
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${dateLabel}</strong></td>
-                    <td style="text-align: right;">${numVal > 0 ? `<span class="ot-badge">${numVal} Hrs</span>` : `<span class="zero-badge">0 Hrs</span>`}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${dateLabel}</strong></td>
+                <td style="text-align: right;">${hrs > 0 ? `<span class="ot-badge">${hrs} Hrs</span>` : `<span class="zero-badge">0 Hrs</span>`}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
         document.getElementById('totalHoursDisplay').innerText = `${totalOt} Hrs`;
 
-        // --- 2. RENDER PAYROLL CARDS ---
+        // Render Payroll Cards
         if (payrollRow) {
             document.getElementById('p1').innerText = '₹' + (payrollRow[3] || '0');
             document.getElementById('p2').innerText = '₹' + (payrollRow[4] || '0');
             document.getElementById('p3').innerText = '₹' + (payrollRow[5] || '0');
             document.getElementById('p4').innerText = '₹' + (payrollRow[6] || '0');
             document.getElementById('p5').innerText = '₹' + (payrollRow[7] || '0');
-            document.getElementById('p6').innerText = ' ' + (payrollRow[8] || '0');
-            document.getElementById('p7').innerText = ' ' + (payrollRow[9] || '0');
+            document.getElementById('p6').innerText = '₹' + (payrollRow[8] || '0');
+            document.getElementById('p7').innerText = '₹' + (payrollRow[9] || '0');
             document.getElementById('p8').innerText = '₹' + (payrollRow[10] || '0');
             document.getElementById('p9').innerText = payrollRow[11] || '0';
             document.getElementById('p10').innerText = '₹' + (payrollRow[12] || '0');

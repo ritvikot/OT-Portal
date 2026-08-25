@@ -8,7 +8,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
     body { background: #0f172a; color: #1e293b; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
 
-    /* Search Card */
+    /* Search Box */
     .portal-card { background: #ffffff; width: 100%; max-width: 420px; padding: 32px 28px; border-radius: 16px; box-shadow: 0 20px 30px rgba(0,0,0,0.3); }
     .portal-card h2 { font-size: 1.5rem; font-weight: 700; color: #0f172a; text-align: center; }
     .portal-card p { font-size: 0.85rem; color: #64748b; text-align: center; margin: 6px 0 24px 0; }
@@ -22,7 +22,7 @@
     .btn-search:hover { background: #1d4ed8; }
     .msg-alert { padding: 10px; border-radius: 6px; font-size: 0.85rem; text-align: center; margin-top: 14px; display: none; background: #fee2e2; color: #b91c1c; }
 
-    /* Dashboard */
+    /* Dashboard Container */
     .result-container { display: none; width: 100%; max-width: 1000px; margin: auto; }
     .res-header { background: #1e293b; color: #ffffff; padding: 18px 24px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
     .res-header h2 { font-size: 1.3rem; }
@@ -31,7 +31,7 @@
 
     .res-body { background: #ffffff; padding: 24px; border-radius: 0 0 12px 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     
-    /* Stats Grids */
+    /* Stats */
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
     .stat-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; }
     .stat-box span { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
@@ -85,7 +85,7 @@
     <div class="res-body">
       <!-- Tab Navigation -->
       <div class="tab-nav">
-        <button class="tab-btn active" onclick="switchView('tab-ot', this)">OverTime Summary</button>
+        <button class="tab-btn active" onclick="switchView('tab-ot', this)">OverTime (Date-Wise)</button>
         <button class="tab-btn" onclick="switchView('tab-pay', this)">Payroll Summary</button>
       </div>
 
@@ -153,6 +153,17 @@
     const SHEET_OT_ID = '1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0';
     const SHEET_PAY_ID = '1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0';
 
+    // Exact cycle dates mapping
+    const CYCLE_DATES = [
+      "21-August-26", "22-August-26", "23-August-26", "24-August-26", "25-August-26",
+      "26-August-26", "27-August-26", "28-August-26", "29-August-26", "30-August-26",
+      "31-August-26", "1-September-26", "2-September-26", "3-September-26", "4-September-26",
+      "5-September-26", "6-September-26", "7-September-26", "8-September-26", "9-September-26",
+      "10-September-26", "11-September-26", "12-September-26", "13-September-26", "14-September-26",
+      "15-September-26", "16-September-26", "17-September-26", "18-September-26", "19-September-26",
+      "20-September-26"
+    ];
+
     function handleKey(e) {
       if (e.key === 'Enter') searchRecord();
     }
@@ -165,8 +176,7 @@
     }
 
     async function fetchGViz(sheetId, tab) {
-      // headers=1 ensure karta hai ki row 1 as column labels aaye
-      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(tab)}`;
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tab)}`;
       const res = await fetch(url);
       const txt = await res.text();
       const parsed = JSON.parse(txt.substring(47).slice(0, -2));
@@ -193,18 +203,9 @@
           fetchGViz(SHEET_PAY_ID, 'Sheet1')
         ]);
 
-        // 1. Match OT Row
+        // 1. Match OverTime Row
         let otRow = null;
-        let otHeaders = otData.cols.map(c => c.label);
-
-        // Agar GViz first row ko labels me nahi la pata to row[0] se read karein
-        let otDataRows = otData.rows;
-        if (otDataRows.length > 0 && String(otDataRows[0].c[0]?.v).toLowerCase() === 'casper') {
-          otHeaders = otDataRows[0].c.map(c => c ? (c.f || c.v || '') : '');
-          otDataRows = otDataRows.slice(1);
-        }
-
-        otDataRows.forEach(r => {
+        otData.rows.forEach(r => {
           const c0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
           const c1 = String(r.c[1] ? (r.c[1].f || r.c[1].v || '') : '').trim();
           if (c0.toLowerCase() === queryId.toLowerCase() || c1.toLowerCase() === queryId.toLowerCase()) {
@@ -214,15 +215,7 @@
 
         // 2. Match Payroll Row
         let payRow = null;
-        let payHeaders = payData.cols.map(c => c.label);
-        let payDataRows = payData.rows;
-
-        if (payDataRows.length > 0 && String(payDataRows[0].c[0]?.v).toLowerCase().includes('associate')) {
-          payHeaders = payDataRows[0].c.map(c => c ? (c.f || c.v || '') : '');
-          payDataRows = payDataRows.slice(1);
-        }
-
-        payDataRows.forEach(r => {
+        payData.rows.forEach(r => {
           const c0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
           if (c0.toLowerCase() === queryId.toLowerCase()) {
             payRow = r;
@@ -249,12 +242,11 @@
         let otDaysCount = 0;
 
         if (otRow) {
-          let sNo = 1;
-          const totalCols = otRow.c.length;
-          // Dates index 5 se lekar second last column tak hain
-          for (let i = 5; i < totalCols - 1; i++) {
-            const dateLabel = otHeaders[i] || `Date ${i - 4}`;
-            const cellVal = otRow.c[i] ? (otRow.c[i].f !== undefined ? otRow.c[i].f : otRow.c[i].v) : '';
+          // Columns 5 se start hokar 31 days mapping
+          for (let i = 0; i < CYCLE_DATES.length; i++) {
+            const dateLabel = CYCLE_DATES[i];
+            const colIndex = 5 + i;
+            const cellVal = otRow.c[colIndex] ? (otRow.c[colIndex].f !== undefined ? otRow.c[colIndex].f : otRow.c[colIndex].v) : '';
             const numVal = parseFloat(cellVal) || 0;
             const isOt = numVal > 0;
 
@@ -262,14 +254,14 @@
 
             otDateHtml += `
               <tr class="${isOt ? 'has-ot' : ''}">
-                <td>${sNo++}</td>
+                <td>${i + 1}</td>
                 <td><strong>${dateLabel}</strong></td>
                 <td>${cellVal ? `${cellVal} Hrs` : '-'}</td>
-                <td>${isOt ? '<span class="badge-ot">OT Added</span>' : '<span style="color:#94a3b8;">Normal</span>'}</td>
+                <td>${isOt ? '<span class="badge-ot">OT Added</span>' : '<span style="color:#94a3b8;">-</span>'}</td>
               </tr>
             `;
           }
-          const lastCell = otRow.c[totalCols - 1];
+          const lastCell = otRow.c[otRow.c.length - 1];
           totalOtCount = lastCell ? (lastCell.f || lastCell.v || 0) : 0;
         } else {
           otDateHtml = '<tr><td colspan="4" style="text-align:center;">Koi OverTime record nahi mila.</td></tr>';
@@ -283,24 +275,31 @@
         const payHead = document.getElementById('payHead');
         const payBody = document.getElementById('payBody');
 
-        // Payroll Columns jisme se OT column ko filter kar diya gaya hai
-        const excludedPayCols = ['OT']; 
-        let validPayIndexes = [];
+        const payCols = [
+          { idx: 0, label: "ASSOCIATE ID" },
+          { idx: 1, label: "FIRST NAME" },
+          { idx: 2, label: "GENDER" },
+          { idx: 3, label: "FEMALE ATTENDANCE Incentive" },
+          { idx: 4, label: "NIGHT SHIFT ALLOWANCE" },
+          { idx: 5, label: "FOOD ALLOWANCE" },
+          { idx: 6, label: "B Shift Incentive" },
+          { idx: 7, label: "Active Bonus" },
+          { idx: 8, label: "Holiday working 15 Aug'26" },
+          { idx: 10, label: "Unnati Scheme" },
+          { idx: 11, label: "LOPR Day's" },
+          { idx: 12, label: "Pending Amount" },
+          { idx: 13, label: "HR Remarks" }
+        ];
 
         let payH = '<tr>';
-        payHeaders.forEach((label, idx) => {
-          if (!excludedPayCols.includes(label?.trim())) {
-            validPayIndexes.push(idx);
-            payH += `<th>${label || `Col ${idx+1}`}</th>`;
-          }
-        });
+        payCols.forEach(c => { payH += `<th>${c.label}</th>`; });
         payH += '</tr>';
         payHead.innerHTML = payH;
 
         if (payRow) {
           let payB = '<tr>';
-          validPayIndexes.forEach(i => {
-            const cell = payRow.c[i];
+          payCols.forEach(c => {
+            const cell = payRow.c[c.idx];
             const val = cell ? (cell.f !== undefined ? cell.f : (cell.v !== null ? cell.v : '')) : '';
             payB += `<td>${val}</td>`;
           });

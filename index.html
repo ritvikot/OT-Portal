@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OverTime & Payroll Portal</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
         body { background-color: #f1f5f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 16px; }
@@ -16,7 +15,7 @@
         
         /* Login */
         .login-box { display: flex; flex-direction: column; gap: 12px; }
-        .login-box input { width: 100%; padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; transition: 0.2s; }
+        .login-box input { width: 100%; padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; }
         .login-box input:focus { border-color: #1a73e8; }
         .btn-primary { background: #1a73e8; color: white; border: none; border-radius: 8px; padding: 12px; font-size: 15px; font-weight: 600; cursor: pointer; }
         .btn-primary:hover { background: #1557b0; }
@@ -103,9 +102,7 @@
                                 <th style="text-align: right;">OT Hours</th>
                             </tr>
                         </thead>
-                        <tbody id="otTableBody">
-                            <!-- Populated dynamically -->
-                        </tbody>
+                        <tbody id="otTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -131,22 +128,41 @@
 </div>
 
 <script>
-    // Direct CSV Export URLs to get raw uncorrupted data
-    const CSV_OT = 'https://docs.google.com/spreadsheets/d/1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0/export?format=csv&gid=552193494';
-    const CSV_PAYROLL = 'https://docs.google.com/spreadsheets/d/1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0/export?format=csv&gid=0';
+    const SHEET_OT_ID = '1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0';
+    const GID_OT = '552193494';
 
-    async function fetchCSV(url) {
-        const res = await fetch(`${url}&_=${Date.now()}`);
-        const text = await res.text();
-        return new Promise(resolve => {
-            Papa.parse(text, {
-                header: false,
-                skipEmptyLines: false,
-                complete: (results) => {
-                    const cleanRows = (results.data || []).map(r => r.map(c => (c !== null && c !== undefined ? c.toString().trim() : '')));
-                    resolve(cleanRows);
+    const SHEET_PAYROLL_ID = '1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0';
+    const GID_PAYROLL = '0';
+
+    // JSONP Loader (Bypasses all CORS issues completely)
+    function loadGoogleSheet(sheetId, gid) {
+        return new Promise((resolve, reject) => {
+            const callbackName = 'cb_' + Math.random().toString(36).substring(2, 9);
+            const script = document.createElement('script');
+            script.src = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=responseHandler:${callbackName}&headers=0&gid=${gid}&_=${Date.now()}`;
+
+            window[callbackName] = (data) => {
+                delete window[callbackName];
+                script.remove();
+                if (!data || !data.table || !data.table.rows) {
+                    return resolve([]);
                 }
-            });
+                const rows = data.table.rows.map(row => 
+                    (row.c || []).map(cell => {
+                        if (!cell || cell.v === null || cell.v === undefined) return '';
+                        return (cell.f ? cell.f : cell.v).toString().trim();
+                    })
+                );
+                resolve(rows);
+            };
+
+            script.onerror = () => {
+                delete window[callbackName];
+                script.remove();
+                reject(new Error('Failed to load Google Sheet'));
+            };
+
+            document.body.appendChild(script);
         });
     }
 
@@ -161,16 +177,17 @@
 
         try {
             const [otGrid, payrollGrid] = await Promise.all([
-                fetchCSV(CSV_OT),
-                fetchCSV(CSV_PAYROLL)
+                loadGoogleSheet(SHEET_OT_ID, GID_OT),
+                loadGoogleSheet(SHEET_PAYROLL_ID, GID_PAYROLL)
             ]);
 
             const otHeaders = otGrid[0] || [];
             const otRows = otGrid.slice(1);
 
-            // Match by Col A, Col B, or Col C
+            // Sheet 1: Col A (Casper), Col B (Emp id), Col C (Casper)
             const otRow = otRows.find(r => r[0] === inputId || r[1] === inputId || r[2] === inputId);
 
+            // Sheet 2: Col A (ASSOCIATE ID)
             const payrollRows = payrollGrid.slice(1);
             const payrollRow = payrollRows.find(r => r[0] === inputId || (otRow && (r[0] === otRow[0] || r[0] === otRow[2])));
 
@@ -179,7 +196,6 @@
                 return;
             }
 
-            // Optional Password verification
             if (inputPass && otRow && otRow[1] && otRow[1].toLowerCase() !== inputPass.toLowerCase()) {
                 alert("गलत पासवर्ड / Emp ID!");
                 return;
@@ -188,22 +204,22 @@
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
 
-            // Profile Info
+            // Profile info
             const name = (otRow && otRow[3]) || (payrollRow && payrollRow[1]) || 'Associate';
             const dept = (otRow && otRow[4]) || 'N/A';
             document.getElementById('empName').innerText = name;
             document.getElementById('empIdDisplay').innerText = inputId;
             document.getElementById('empDept').innerText = dept;
 
-            // --- 1. OVERTIME DATE-WISE TABLE (FROM ROW 1 COLUMN F / INDEX 5) ---
+            // --- 1. OVERTIME TABLE: DATES FROM COLUMN F (INDEX 5) ---
             const tbody = document.getElementById('otTableBody');
             tbody.innerHTML = '';
             let totalOt = 0;
 
             if (otRow) {
                 for (let col = 5; col < otHeaders.length; col++) {
-                    const dateHeader = otHeaders[col];
-                    if (!dateHeader) continue;
+                    const dateText = otHeaders[col];
+                    if (!dateText) continue;
 
                     const rawVal = otRow[col] || '';
                     const numVal = parseFloat(rawVal) || 0;
@@ -211,7 +227,7 @@
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td><strong>${dateHeader}</strong></td>
+                        <td><strong>${dateText}</strong></td>
                         <td style="text-align: right;">${numVal > 0 ? `<span class="ot-badge">${numVal} Hrs</span>` : `<span class="zero-badge">0 Hrs</span>`}</td>
                     `;
                     tbody.appendChild(tr);
@@ -237,7 +253,7 @@
             }
 
         } catch (err) {
-            console.error("Fetch Error:", err);
+            console.error("Sheet Error:", err);
             alert("डेटा लोड करने में समस्या आई।");
         }
     }

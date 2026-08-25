@@ -133,7 +133,6 @@
     const PAYROLL_SHEET_ID = "1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0";
     const PAYROLL_GID = "0";
 
-    // All 31 Dates from 21-August-26 to 20-September-26
     const FULL_DATES = [
         "21-August-26", "22-August-26", "23-August-26", "24-August-26", "25-August-26",
         "26-August-26", "27-August-26", "28-August-26", "29-August-26", "30-August-26", "31-August-26",
@@ -143,12 +142,27 @@
         "16-September-26", "17-September-26", "18-September-26", "19-September-26", "20-September-26"
     ];
 
-    // Parser for TSV / CSV / GViz
-    async function fetchSheetData(sheetId, gid) {
-        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=tsv&gid=${gid}&_=${Date.now()}`;
+    async function fetchGVizTable(sheetId, gid) {
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&gid=${gid}&_=${Date.now()}`;
         const res = await fetch(url);
         const text = await res.text();
-        return text.split(/\r?\n/).map(row => row.split('\t').map(c => c.trim().replace(/^"|"$/g, '')));
+        const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+        const data = JSON.parse(jsonStr);
+
+        return (data.table.rows || []).map(row => {
+            const rowArr = [];
+            const cells = row.c || [];
+            // Google Sheet me 40 columns tak ka safe traversal
+            for (let i = 0; i < 40; i++) {
+                const cell = cells[i];
+                if (!cell || cell.v === null || cell.v === undefined) {
+                    rowArr.push('');
+                } else {
+                    rowArr.push((cell.f ? cell.f : cell.v).toString().trim());
+                }
+            }
+            return rowArr;
+        });
     }
 
     async function handleLogin() {
@@ -167,14 +181,14 @@
 
         try {
             const [otGrid, payrollGrid] = await Promise.all([
-                fetchSheetData(OT_SHEET_ID, OT_GID),
-                fetchSheetData(PAYROLL_SHEET_ID, PAYROLL_GID)
+                fetchGVizTable(OT_SHEET_ID, OT_GID),
+                fetchGVizTable(PAYROLL_SHEET_ID, PAYROLL_GID)
             ]);
 
-            // Match in OT Sheet (Col A = 0, Col B = 1, Col C = 2)
+            // Match ID in OT Sheet (Col A = 0, Col B = 1, Col C = 2)
             const otRow = otGrid.find(r => r[0] === inputId || r[1] === inputId || r[2] === inputId);
 
-            // Match in Payroll Sheet (Col A = 0)
+            // Match ID in Payroll Sheet (Col A = 0)
             const payrollRow = payrollGrid.find(r => r[0] === inputId || (otRow && (r[0] === otRow[0] || r[0] === otRow[2])));
 
             if (!otRow && !payrollRow) {
@@ -183,7 +197,7 @@
                 return;
             }
 
-            // Password check (Emp ID in Col B)
+            // Optional Password check (Emp ID in Col B)
             if (inputPass && otRow && otRow[1] && otRow[1].toLowerCase() !== inputPass.toLowerCase()) {
                 msg.style.color = "#dc2626";
                 msg.innerText = "गलत पासवर्ड / Emp ID!";
@@ -200,14 +214,14 @@
             document.getElementById('idDisplay').innerText = inputId;
             document.getElementById('deptDisplay').innerText = dept;
 
-            // --- 1. POPULATE 21-AUG TO 20-SEP OVERTIME TABLE ---
+            // --- 1. RENDER ALL 31 DATES (21-AUG TO 20-SEP) ---
             const tbody = document.getElementById('otTableBody');
             tbody.innerHTML = '';
             let totalOt = 0;
 
             if (otRow) {
                 FULL_DATES.forEach((dateLabel, idx) => {
-                    const colIndex = 5 + idx; // Col F is Index 5
+                    const colIndex = 5 + idx; // Col F is Index 5 (21-August-26)
                     const rawVal = otRow[colIndex] || '0';
                     const numVal = parseFloat(rawVal) || 0;
                     totalOt += numVal;
@@ -222,15 +236,15 @@
             }
             document.getElementById('totalHoursDisplay').innerText = `${totalOt} Hrs`;
 
-            // --- 2. POPULATE 11 PAYROLL FIELDS ---
+            // --- 2. RENDER PAYROLL CARDS ---
             if (payrollRow) {
                 document.getElementById('p1').innerText = '₹' + (payrollRow[3] || '0');
                 document.getElementById('p2').innerText = '₹' + (payrollRow[4] || '0');
                 document.getElementById('p3').innerText = '₹' + (payrollRow[5] || '0');
                 document.getElementById('p4').innerText = '₹' + (payrollRow[6] || '0');
                 document.getElementById('p5').innerText = '₹' + (payrollRow[7] || '0');
-                document.getElementById('p6').innerText = '₹' + (payrollRow[8] || '0');
-                document.getElementById('p7').innerText = '₹' + (payrollRow[9] || '0');
+                document.getElementById('p6').innerText = ' ' + (payrollRow[8] || '0');
+                document.getElementById('p7').innerText = ' ' + (payrollRow[9] || '0');
                 document.getElementById('p8').innerText = '₹' + (payrollRow[10] || '0');
                 document.getElementById('p9').innerText = payrollRow[11] || '0';
                 document.getElementById('p10').innerText = '₹' + (payrollRow[12] || '0');

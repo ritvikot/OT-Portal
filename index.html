@@ -4,16 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Employee Self Service Portal</title>
+  <!-- FontAwesome for Instagram Icon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-    body { background: #0f172a; color: #1e293b; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    body { background: #0f172a; color: #1e293b; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
 
     /* Search Box */
-    .portal-card { background: #ffffff; width: 100%; max-width: 420px; padding: 32px 28px; border-radius: 16px; box-shadow: 0 20px 30px rgba(0,0,0,0.3); }
-    .portal-card h2 { font-size: 1.5rem; font-weight: 700; color: #0f172a; text-align: center; }
-    .portal-card p { font-size: 0.85rem; color: #64748b; text-align: center; margin: 6px 0 24px 0; }
+    .portal-card { background: #ffffff; width: 100%; max-width: 420px; padding: 32px 28px; border-radius: 16px; box-shadow: 0 20px 30px rgba(0,0,0,0.3); text-align: center; }
+    .portal-card h2 { font-size: 1.5rem; font-weight: 700; color: #0f172a; }
+    .portal-card p { font-size: 0.85rem; color: #64748b; margin: 6px 0 24px 0; }
     
-    .input-field { margin-bottom: 16px; }
+    .input-field { margin-bottom: 16px; text-align: left; }
     .input-field label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; color: #334155; }
     .input-field input { width: 100%; padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; }
     .input-field input:focus { border-color: #2563eb; }
@@ -54,6 +56,12 @@
     
     .has-ot { background-color: #ecfdf5 !important; font-weight: 600; color: #059669; }
     .badge-ot { background: #10b981; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; }
+
+    /* Instagram Link Styles */
+    .social-link { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 600; color: #e1306c; margin-top: 18px; transition: opacity 0.2s; }
+    .social-link:hover { opacity: 0.8; }
+    .social-link i { font-size: 1.1rem; }
+    .dashboard-footer { text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
   </style>
 </head>
 <body>
@@ -70,6 +78,13 @@
 
     <button class="btn-search" id="submitBtn" onclick="searchRecord()">View Details</button>
     <div class="msg-alert" id="errorNotice">Record nahi mila! Sahi ID daalein.</div>
+
+    <!-- Instagram Link on Card -->
+    <div>
+      <a href="https://www.instagram.com/wildandfree_ritvik" target="_blank" rel="noopener noreferrer" class="social-link">
+        <i class="fa-brands fa-instagram"></i> Follow on Instagram
+      </a>
+    </div>
   </div>
 
   <!-- Dashboard -->
@@ -146,6 +161,13 @@
         </div>
       </div>
 
+      <!-- Instagram Link on Dashboard -->
+      <div class="dashboard-footer">
+        <a href="https://www.instagram.com/wildandfree_ritvik" target="_blank" rel="noopener noreferrer" class="social-link">
+          <i class="fa-brands fa-instagram"></i> Follow on Instagram
+        </a>
+      </div>
+
     </div>
   </div>
 
@@ -153,7 +175,6 @@
     const SHEET_OT_ID = '1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0';
     const SHEET_PAY_ID = '1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0';
 
-    // Exact cycle dates mapping
     const CYCLE_DATES = [
       "21-August-26", "22-August-26", "23-August-26", "24-August-26", "25-August-26",
       "26-August-26", "27-August-26", "28-August-26", "29-August-26", "30-August-26",
@@ -203,7 +224,6 @@
           fetchGViz(SHEET_PAY_ID, 'Sheet1')
         ]);
 
-        // 1. Match OverTime Row
         let otRow = null;
         otData.rows.forEach(r => {
           const c0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
@@ -213,7 +233,6 @@
           }
         });
 
-        // 2. Match Payroll Row
         let payRow = null;
         payData.rows.forEach(r => {
           const c0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
@@ -229,20 +248,17 @@
           return;
         }
 
-        // Title Info
         const name = (otRow && otRow.c[3] ? (otRow.c[3].f || otRow.c[3].v) : '') || 
                      (payRow && payRow.c[1] ? (payRow.c[1].f || payRow.c[1].v) : '') || 'Employee Details';
         document.getElementById('dispName').innerText = `${name}`;
         document.getElementById('dispId').innerText = `Searched ID: ${queryId}`;
 
-        // ---------------- OVERTIME PROCESSING ----------------
         const otDateBody = document.getElementById('otDateWiseBody');
         let otDateHtml = '';
         let totalOtCount = 0;
         let otDaysCount = 0;
 
         if (otRow) {
-          // Columns 5 se start hokar 31 days mapping
           for (let i = 0; i < CYCLE_DATES.length; i++) {
             const dateLabel = CYCLE_DATES[i];
             const colIndex = 5 + i;
@@ -271,7 +287,6 @@
         document.getElementById('cardOT').innerText = `${totalOtCount} Hrs`;
         document.getElementById('cardOTDays').innerText = `${otDaysCount} Days`;
 
-        // ---------------- PAYROLL PROCESSING (OT Excluded) ----------------
         const payHead = document.getElementById('payHead');
         const payBody = document.getElementById('payBody');
 
@@ -306,7 +321,6 @@
           payB += '</tr>';
           payBody.innerHTML = payB;
 
-          // Top Cards
           document.getElementById('cardFemaleInc').innerText = `₹${payRow.c[3] ? (payRow.c[3].v || 0) : 0}`;
           document.getElementById('cardNight').innerText = `₹${payRow.c[4] ? (payRow.c[4].v || 0) : 0}`;
           document.getElementById('cardFood').innerText = `₹${payRow.c[5] ? (payRow.c[5].v || 0) : 0}`;
@@ -319,7 +333,6 @@
           document.getElementById('cardBonus').innerText = '₹0';
         }
 
-        // Show Dashboard
         document.getElementById('searchBox').style.display = 'none';
         document.getElementById('resultBox').style.display = 'block';
         document.body.style.alignItems = 'flex-start';

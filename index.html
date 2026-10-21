@@ -67,10 +67,10 @@
 
     <div class="input-field">
       <label>User ID / Casper ID</label>
-      <input type="text" id="empIdInput" placeholder="e.g. 2333480" onkeypress="if(event.key === 'Enter') searchRecord()" />
+      <input type="text" id="empIdInput" placeholder="e.g. 2333480" />
     </div>
 
-    <button class="btn-search" id="submitBtn" onclick="searchRecord()">View Details</button>
+    <button type="button" class="btn-search" id="submitBtn">View Details</button>
     <div class="msg-alert" id="errorNotice">Record nahi mila! Sahi ID daalein.</div>
 
     <div>
@@ -80,20 +80,20 @@
     </div>
   </div>
 
-  <!-- Dashboard -->
+  <!-- Dashboard Container -->
   <div class="result-container" id="resultBox">
     <div class="res-header">
       <div>
         <h2 id="dispName">Welcome</h2>
         <span id="dispId" style="color: #94a3b8; font-size: 0.85rem;"></span>
       </div>
-      <button class="btn-back" onclick="goBack()">New Search</button>
+      <button type="button" class="btn-back" id="backBtn">New Search</button>
     </div>
 
     <div class="res-body">
       <div class="tab-nav">
-        <button class="tab-btn active" onclick="switchView('tab-ot', this)">OverTime (Date-Wise)</button>
-        <button class="tab-btn" onclick="switchView('tab-pay', this)">Payroll Summary</button>
+        <button type="button" class="tab-btn active" id="tabBtnOt">OverTime (Date-Wise)</button>
+        <button type="button" class="tab-btn" id="tabBtnPay">Payroll Summary</button>
       </div>
 
       <!-- TAB 1: OVERTIME -->
@@ -184,19 +184,22 @@
     }
 
     async function fetchGViz(sheetId, tab) {
-      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tab)}`;
+      const url = "https://docs.google.com/spreadsheets/d/" + sheetId + "/gviz/tq?tqx=out:json&sheet=" + encodeURIComponent(tab);
       const res = await fetch(url);
       const txt = await res.text();
-      const jsonStr = txt.replace(/^[/*\s]*google\.visualization\.Query\.setResponse\(/, '').replace(/\);?[/*\s]*$/, '');
-      const parsed = JSON.parse(jsonStr);
-      return { cols: parsed.table.cols, rows: parsed.table.rows };
+      const s = txt.indexOf('{');
+      const e = txt.lastIndexOf('}');
+      if (s === -1 || e === -1) {
+        throw new Error('Sheet data parse nahi ho pa raha');
+      }
+      const data = JSON.parse(txt.substring(s, e + 1));
+      return { cols: data.table.cols, rows: data.table.rows };
     }
 
-    async function searchRecord() {
-      const inputEl = document.getElementById('empIdInput');
+    async function runSearch() {
+      const queryId = document.getElementById('empIdInput').value.trim();
       const err = document.getElementById('errorNotice');
       const btn = document.getElementById('submitBtn');
-      const queryId = inputEl ? inputEl.value.trim() : '';
 
       if (!queryId) {
         err.innerText = "Kripya ID daalein!";
@@ -215,25 +218,29 @@
 
         let otRow = null;
         if (otData && otData.rows) {
-          otData.rows.forEach(r => {
-            if (!r || !r.c) return;
+          for (let i = 0; i < otData.rows.length; i++) {
+            const r = otData.rows[i];
+            if (!r || !r.c) continue;
             const c0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
             const c1 = String(r.c[1] ? (r.c[1].f || r.c[1].v || '') : '').trim();
             if (c0.toLowerCase() === queryId.toLowerCase() || c1.toLowerCase() === queryId.toLowerCase()) {
               otRow = r;
+              break;
             }
-          });
+          }
         }
 
         let payRow = null;
         if (payData && payData.rows) {
-          payData.rows.forEach(r => {
-            if (!r || !r.c) return;
+          for (let i = 0; i < payData.rows.length; i++) {
+            const r = payData.rows[i];
+            if (!r || !r.c) continue;
             const c0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
             if (c0.toLowerCase() === queryId.toLowerCase()) {
               payRow = r;
+              break;
             }
-          });
+          }
         }
 
         if (!otRow && !payRow) {
@@ -245,8 +252,8 @@
 
         const name = (otRow && otRow.c && otRow.c[3] ? (otRow.c[3].f || otRow.c[3].v) : '') || 
                      (payRow && payRow.c && payRow.c[1] ? (payRow.c[1].f || payRow.c[1].v) : '') || 'Employee Details';
-        document.getElementById('dispName').innerText = `${name}`;
-        document.getElementById('dispId').innerText = `Searched ID: ${queryId}`;
+        document.getElementById('dispName').innerText = String(name);
+        document.getElementById('dispId').innerText = "Searched ID: " + queryId;
 
         const otDateBody = document.getElementById('otDateWiseBody');
         let otDateHtml = '';
@@ -264,14 +271,12 @@
 
             if (isOt) otDaysCount++;
 
-            otDateHtml += `
-              <tr class="${isOt ? 'has-ot' : ''}">
-                <td>${i + 1}</td>
-                <td><strong>${dateLabel}</strong></td>
-                <td>${cellVal !== '' && cellVal !== 0 ? `${cellVal} Hrs` : (numVal > 0 ? `${numVal} Hrs` : '-')}</td>
-                <td>${isOt ? '<span class="badge-ot">OT Added</span>' : '<span style="color:#94a3b8;">-</span>'}</td>
-              </tr>
-            `;
+            otDateHtml += '<tr class="' + (isOt ? 'has-ot' : '') + '">' +
+              '<td>' + (i + 1) + '</td>' +
+              '<td><strong>' + dateLabel + '</strong></td>' +
+              '<td>' + (cellVal !== '' && cellVal !== 0 ? cellVal + ' Hrs' : (numVal > 0 ? numVal + ' Hrs' : '-')) + '</td>' +
+              '<td>' + (isOt ? '<span class="badge-ot">OT Added</span>' : '<span style="color:#94a3b8;">-</span>') + '</td>' +
+            '</tr>';
           }
           const lastCell = otRow.c[otRow.c.length - 1];
           totalOtCount = lastCell ? (lastCell.f || lastCell.v || 0) : 0;
@@ -280,4 +285,42 @@
         }
 
         otDateBody.innerHTML = otDateHtml;
-        document.getElementById('cardOT').innerText = `${totalOtCount} Hrs`;
+        document.getElementById('cardOT').innerText = totalOtCount + " Hrs";
+        document.getElementById('cardOTDays').innerText = otDaysCount + " Days";
+
+        const payHead = document.getElementById('payHead');
+        const payBody = document.getElementById('payBody');
+
+        const payCols = [
+          { idx: 0, label: "ASSOCIATE ID" },
+          { idx: 1, label: "FIRST NAME" },
+          { idx: 2, label: "GENDER" },
+          { idx: 3, label: "FEMALE ATTENDANCE Incentive" },
+          { idx: 4, label: "NIGHT SHIFT ALLOWANCE" },
+          { idx: 5, label: "FOOD ALLOWANCE" },
+          { idx: 6, label: "B Shift Incentive" },
+          { idx: 7, label: "Active Bonus" },
+          { idx: 8, label: "Holiday working 15 Aug'26" },
+          { idx: 10, label: "Unnati Scheme" },
+          { idx: 11, label: "LOPR Day's" },
+          { idx: 12, label: "OT Hours" },
+          { idx: 13, label: "HR Remarks" }
+        ];
+
+        let payH = '<tr>';
+        payCols.forEach(c => { payH += '<th>' + c.label + '</th>'; });
+        payH += '</tr>';
+        payHead.innerHTML = payH;
+
+        if (payRow && payRow.c) {
+          let payB = '<tr>';
+          payCols.forEach(c => {
+            const cell = payRow.c[c.idx];
+            const val = cell ? (cell.f !== undefined && cell.f !== null ? cell.f : (cell.v !== null && cell.v !== undefined ? cell.v : '')) : '';
+            payB += '<td>' + val + '</td>';
+          });
+          payB += '</tr>';
+          payBody.innerHTML = payB;
+
+          document.getElementById('cardFemaleInc').innerText = "₹" + (payRow.c[3] ? (payRow.c[3].v || 0) : 0);
+          document.getElementById('cardNight').innerText = "₹" + (

@@ -176,7 +176,7 @@
       "16-November-26", "17-November-26", "18-November-26", "19-November-26", "20-November-26"
     ];
 
-    // EXACT Columns Match as per your Sheet screenshot
+    // Col A se Col O tak exact order[cite: 15, 16]
     const payCols = [
       { idx: 0, label: "ASSOCIATE ID" },
       { idx: 2, label: "FIRST NAME" },
@@ -206,9 +206,12 @@
       document.getElementById('resultBox').style.display = 'none';
       document.getElementById('searchBox').style.display = 'block';
       const btn = document.getElementById('submitBtn');
-      btn.disabled = false;
-      btn.innerText = 'View Details';
-      document.getElementById('errorNotice').style.display = 'none';
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = 'View Details';
+      }
+      const err = document.getElementById('errorNotice');
+      if (err) err.style.display = 'none';
     }
 
     async function fetchGViz(sheetId, tab) {
@@ -243,20 +246,29 @@
       return '-';
     }
 
+    function setText(id, text) {
+      const el = document.getElementById(id);
+      if (el) el.innerText = text;
+    }
+
     async function runSearch() {
       const queryId = document.getElementById('empIdInput').value.trim();
       const err = document.getElementById('errorNotice');
       const btn = document.getElementById('submitBtn');
 
       if (!queryId) {
-        err.innerText = "Kripya ID daalein!";
-        err.style.display = 'block';
+        if (err) {
+          err.innerText = "Kripya ID daalein!";
+          err.style.display = 'block';
+        }
         return;
       }
 
-      err.style.display = 'none';
-      btn.innerText = 'Searching...';
-      btn.disabled = true;
+      if (err) err.style.display = 'none';
+      if (btn) {
+        btn.innerText = 'Searching...';
+        btn.disabled = true;
+      }
 
       try {
         const [otData, payData] = await Promise.all([
@@ -279,7 +291,7 @@
           }
         }
 
-        // 2. Payroll Sheet match (Column A / Column B dono me Associate ID match karega)
+        // 2. Payroll Sheet match
         let payRow = null;
         if (payData && payData.rows) {
           for (let i = 0; i < payData.rows.length; i++) {
@@ -295,17 +307,21 @@
         }
 
         if (!otRow && !payRow) {
-          err.innerText = "Is ID ka koi record nahi mila!";
-          err.style.display = 'block';
-          btn.innerText = 'View Details';
-          btn.disabled = false;
+          if (err) {
+            err.innerText = "Is ID ka koi record nahi mila!";
+            err.style.display = 'block';
+          }
+          if (btn) {
+            btn.innerText = 'View Details';
+            btn.disabled = false;
+          }
           return;
         }
 
         const name = (payRow && payRow.c && payRow.c[2] ? (payRow.c[2].f || payRow.c[2].v) : '') || 
                      (otRow && otRow.c && otRow.c[3] ? (otRow.c[3].f || otRow.c[3].v) : '') || 'Employee Details';
-        document.getElementById('dispName').innerText = String(name);
-        document.getElementById('dispId').innerText = "Searched ID: " + queryId;
+        setText('dispName', String(name));
+        setText('dispId', "Searched ID: " + queryId);
 
         // Render OT Tab
         const otDateBody = document.getElementById('otDateWiseBody');
@@ -337,27 +353,31 @@
           otDateHtml = '<tr><td colspan="4" style="text-align:center;">Koi OverTime record nahi mila.</td></tr>';
         }
 
-        otDateBody.innerHTML = otDateHtml;
-        document.getElementById('cardOT').innerText = totalOtCount + " Hrs";
-        document.getElementById('cardOTDays').innerText = otDaysCount + " Days";
+        if (otDateBody) otDateBody.innerHTML = otDateHtml;
+        setText('cardOT', totalOtCount + " Hrs");
+        setText('cardOTDays', otDaysCount + " Days");
 
         // Render Payroll Tab
         const payHead = document.getElementById('payHead');
         const payBody = document.getElementById('payBody');
 
-        let payH = '<tr>';
-        payCols.forEach(c => { payH += '<th>' + c.label + '</th>'; });
-        payH += '</tr>';
-        payHead.innerHTML = payH;
+        if (payHead) {
+          let payH = '<tr>';
+          payCols.forEach(c => { payH += '<th>' + c.label + '</th>'; });
+          payH += '</tr>';
+          payHead.innerHTML = payH;
+        }
 
         if (payRow && payRow.c) {
-          let payB = '<tr>';
-          payCols.forEach(c => {
-            const cell = (payRow.c && payRow.c.length > c.idx) ? payRow.c[c.idx] : null;
-            payB += '<td>' + formatCellVal(cell) + '</td>';
-          });
-          payB += '</tr>';
-          payBody.innerHTML = payB;
+          if (payBody) {
+            let payB = '<tr>';
+            payCols.forEach(c => {
+              const cell = (payRow.c && payRow.c.length > c.idx) ? payRow.c[c.idx] : null;
+              payB += '<td>' + formatCellVal(cell) + '</td>';
+            });
+            payB += '</tr>';
+            payBody.innerHTML = payB;
+          }
 
           const getAmt = (idx) => {
             const cell = (payRow.c && payRow.c.length > idx) ? payRow.c[idx] : null;
@@ -365,20 +385,22 @@
             return cell.f !== undefined && cell.f !== null ? cell.f : (cell.v !== null && cell.v !== undefined ? cell.v : 0);
           };
 
-          // Col G (Index 6) -> Night Shift Allowance
-          // Col H (Index 7) -> Food Allowance
-          // Col J (Index 9) -> Active Bonus
-          // Col F (Index 5) -> Female Attendance Incentive
-          document.getElementById('cardNight').innerText = "₹" + getAmt(6);
-          document.getElementById('cardFood').innerText = "₹" + getAmt(7);
-          document.getElementById('cardBonus').innerText = "₹" + getAmt(9);
-          document.getElementById('cardFemaleInc').innerText = "₹" + getAmt(5);
+          // Col G (Index 6) -> Night Shift[cite: 16]
+          // Col H (Index 7) -> Food Allowance[cite: 15, 16]
+          // Col J (Index 9) -> Active Bonus[cite: 15, 16]
+          // Col F (Index 5) -> Female Attendance Incentive[cite: 16]
+          setText('cardNight', "₹" + getAmt(6));
+          setText('cardFood', "₹" + getAmt(7));
+          setText('cardBonus', "₹" + getAmt(9));
+          setText('cardFemaleInc', "₹" + getAmt(5));
         } else {
-          payBody.innerHTML = '<tr><td colspan="' + payCols.length + '" style="text-align:center;">Koi Payroll record nahi mila.</td></tr>';
-          document.getElementById('cardNight').innerText = "₹0";
-          document.getElementById('cardFood').innerText = "₹0";
-          document.getElementById('cardBonus').innerText = "₹0";
-          document.getElementById('cardFemaleInc').innerText = "₹0";
+          if (payBody) {
+            payBody.innerHTML = '<tr><td colspan="' + payCols.length + '" style="text-align:center;">Koi Payroll record nahi mila.</td></tr>';
+          }
+          setText('cardNight', "₹0");
+          setText('cardFood', "₹0");
+          setText('cardBonus', "₹0");
+          setText('cardFemaleInc', "₹0");
         }
 
         document.getElementById('searchBox').style.display = 'none';
@@ -386,11 +408,15 @@
 
       } catch (e) {
         console.error(e);
-        err.innerText = "Error: Sheet data load nahi ho paya. (" + e.message + ")";
-        err.style.display = 'block';
+        if (err) {
+          err.innerText = "Error: Sheet data load nahi ho paya. (" + e.message + ")";
+          err.style.display = 'block';
+        }
       } finally {
-        btn.innerText = 'View Details';
-        btn.disabled = false;
+        if (btn) {
+          btn.innerText = 'View Details';
+          btn.disabled = false;
+        }
       }
     }
   </script>

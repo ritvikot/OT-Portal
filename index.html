@@ -20,7 +20,7 @@
 
     .btn-search { width: 100%; padding: 12px; background: #2563eb; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
     .btn-search:hover { background: #1d4ed8; }
-    .btn-search:disabled { background: #94a3b8; cursor: not-allowed; }
+    .btn-search:disabled { background: #64748b; cursor: not-allowed; }
     .msg-alert { padding: 10px; border-radius: 6px; font-size: 0.85rem; text-align: center; margin-top: 14px; display: none; background: #fee2e2; color: #b91c1c; }
 
     #resultBox { display: none; width: 100%; max-width: 1100px; margin: 0 auto; }
@@ -71,7 +71,6 @@
       <input type="text" id="empIdInput" placeholder="e.g. 2333480" onkeydown="if(event.key==='Enter') runSearch();" />
     </div>
 
-    <!-- Direct onclick added to eliminate event listener failures -->
     <button type="button" class="btn-search" id="submitBtn" onclick="runSearch();">View Details</button>
     <div class="msg-alert" id="errorNotice">Record nahi mila! Sahi ID daalein.</div>
 
@@ -168,6 +167,10 @@
     const SHEET_OT_ID = '1wL36ZedH-wVc7NVTiBzwPGTxYy-8fPCEnUebPmrMZQ0';
     const SHEET_PAY_ID = '1EZm6Kyrp6h4rUBuUv0l7HHd3IRQvqT2-10xs4YzyML0';
 
+    // In-memory cache to prevent repeated network delays
+    let cachedOtData = null;
+    let cachedPayData = null;
+
     const CYCLE_DATES = [
       "21-October-26", "22-October-26", "23-October-26", "24-October-26", "25-October-26",
       "26-October-26", "27-October-26", "28-October-26", "29-October-26", "30-October-26", "31-October-26",
@@ -188,11 +191,20 @@
     function goBack() {
       document.getElementById('resultBox').style.display = 'none';
       document.getElementById('searchBox').style.display = 'block';
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = false;
+      btn.innerText = 'View Details';
+      document.getElementById('errorNotice').style.display = 'none';
     }
 
     async function fetchGViz(sheetId, tab) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s auto-timeout
+
       const url = "https://docs.google.com/spreadsheets/d/" + sheetId + "/gviz/tq?tqx=out:json&sheet=" + encodeURIComponent(tab);
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
       const txt = await res.text();
       const s = txt.indexOf('{');
       const e = txt.lastIndexOf('}');
@@ -238,12 +250,101 @@
       btn.disabled = true;
 
       try {
-        const [otData, payData] = await Promise.all([
-          fetchGViz(SHEET_OT_ID, 'Data'),
-          fetchGViz(SHEET_PAY_ID, 'Sheet1')
-        ]);
+        // Fetch only if not already cached
+        if (!cachedOtData || !cachedPayData) {
+          const [otData, payData] = await Promise.all([
+            fetchGViz(SHEET_OT_ID, 'Data'),
+            fetchGViz(SHEET_PAY_ID, 'Sheet1')
+          ]);
+          cachedOtData = otData;
+          cachedPayData = payData;
+        }
 
-        // 1. OT Sheet match
+        // 1. OT Sheet search
         let otRow = null;
-        if (otData && otData.rows) {
-          for (let i = 0; i < otData.rows.
+        if (cachedOtData && cachedOtData.rows) {
+          for (let i = 0; i < cachedOtData.rows.length; i++) {
+            const r = cachedOtData.rows[i];
+            if (!r || !r.c) continue;
+            const c0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
+            const c1 = String(r.c[1] ? (r.c[1].f || r.c[1].v || '') : '').trim();
+            if (c0.toLowerCase() === queryId.toLowerCase() || c1.toLowerCase() === queryId.toLowerCase()) {
+              otRow = r;
+              break;
+            }
+          }
+        }
+
+        // 2. Payroll Sheet search (Col A: Vendor ID ya Col B: Associate ID)[cite: 3]
+        let payRow = null;
+        if (cachedPayData && cachedPayData.rows) {
+          for (let i = 0; i < cachedPayData.rows.length; i++) {
+            const r = cachedPayData.rows[i];
+            if (!r || !r.c) continue;
+            const c0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
+            const c1 = String(r.c[1] ? (r.c[1].f || r.c[1].v || '') : '').trim();
+            if (c0.toLowerCase() === queryId.toLowerCase() || c1.toLowerCase() === queryId.toLowerCase()) {
+              payRow = r;
+              break;
+            }
+          }
+        }
+
+        if (!otRow && !payRow) {
+          err.innerText = "Is ID ka koi record nahi mila!";
+          err.style.display = 'block';
+          btn.innerText = 'View Details';
+          btn.disabled = false;
+          return;
+        }
+
+        const name = (otRow && otRow.c && otRow.c[3] ? (otRow.c[3].f || otRow.c[3].v) : '') || 
+                     (payRow && payRow.c && payRow.c[2] ? (payRow.c[2].f || payRow.c[2].v) : '') || 'Employee Details';
+        document.getElementById('dispName').innerText = String(name);
+        document.getElementById('dispId').innerText = "Searched ID: " + queryId;
+
+        // Render OT Tab
+        const otDateBody = document.getElementById('otDateWiseBody');
+        let otDateHtml = '';
+        let totalOtCount = 0;
+        let otDaysCount = 0;
+
+        if (otRow && otRow.c) {
+          for (let i = 0; i < CYCLE_DATES.length; i++) {
+            const dateLabel = CYCLE_DATES[i];
+            const colIndex = 5 + i;
+            const cell = otRow.c[colIndex];
+            const cellVal = cell ? (cell.f !== undefined && cell.f !== null ? cell.f : (cell.v !== null && cell.v !== undefined ? cell.v : '')) : '';
+            const numVal = parseFloat(cellVal) || 0;
+            const isOt = numVal > 0;
+
+            if (isOt) otDaysCount++;
+
+            otDateHtml += '<tr class="' + (isOt ? 'has-ot' : '') + '">' +
+              '<td>' + (i + 1) + '</td>' +
+              '<td><strong>' + dateLabel + '</strong></td>' +
+              '<td>' + (cellVal !== '' && cellVal !== 0 ? cellVal + ' Hrs' : (numVal > 0 ? numVal + ' Hrs' : '-')) + '</td>' +
+              '<td>' + (isOt ? '<span class="badge-ot">OT Added</span>' : '<span style="color:#94a3b8;">-</span>') + '</td>' +
+            '</tr>';
+          }
+          const lastCell = otRow.c[otRow.c.length - 1];
+          totalOtCount = lastCell ? (lastCell.f || lastCell.v || 0) : 0;
+        } else {
+          otDateHtml = '<tr><td colspan="4" style="text-align:center;">Koi OverTime record nahi mila.</td></tr>';
+        }
+
+        otDateBody.innerHTML = otDateHtml;
+        document.getElementById('cardOT').innerText = totalOtCount + " Hrs";
+        document.getElementById('cardOTDays').innerText = otDaysCount + " Days";
+
+        // Render Payroll Tab (Col A to O)[cite: 3]
+        const payHead = document.getElementById('payHead');
+        const payBody = document.getElementById('payBody');
+
+        const payCols = [
+          { idx: 0, label: "VENDOR EMPLOYEE ID" },          // Col A[cite: 3]
+          { idx: 1, label: "ASSOCIATE ID" },                // Col B[cite: 3]
+          { idx: 2, label: "FIRST NAME" },                  // Col C[cite: 3]
+          { idx: 3, label: "DATE OF JOINING" },             // Col D[cite: 3]
+          { idx: 4, label: "GENDER" },                      // Col E[cite: 3]
+          { idx: 5, label: "FEMALE ATTENDANCE INCENTIVE" }, // Col F[cite: 3]

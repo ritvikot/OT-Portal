@@ -209,6 +209,7 @@
 
       err.style.display = 'none';
       btn.innerText = 'Searching...';
+      btn.disabled = true;
 
       try {
         const [otData, payData] = await Promise.all([
@@ -247,6 +248,7 @@
           err.innerText = "Is ID ka koi record nahi mila!";
           err.style.display = 'block';
           btn.innerText = 'View Details';
+          btn.disabled = false;
           return;
         }
 
@@ -323,4 +325,49 @@
           payBody.innerHTML = payB;
 
           document.getElementById('cardFemaleInc').innerText = "₹" + (payRow.c[3] ? (payRow.c[3].v || 0) : 0);
-          document.getElementById('cardNight').innerText = "₹" + (
+          document.getElementById('cardNight').innerText = "₹" + (payRow.c[4] ? (payRow.c[4].v || 0) : 0);
+          document.getElementById('cardFood').innerText = "₹" + (payRow.c[5] ? (payRow.c[5].v || 0) : 0);
+          document.getElementById('cardBonus').innerText = "₹" + (payRow.c[7] ? (payRow.c[7].v || 0) : 0);
+        } else {
+          payBody.innerHTML = '<tr><td colspan="' + payCols.length + '" style="text-align:center;">Koi Payroll record nahi mila.</td></tr>';
+          document.getElementById('cardFemaleInc').innerText = "₹0";
+          document.getElementById('cardNight').innerText = "₹0";
+          document.getElementById('cardFood').innerText = "₹0";
+          document.getElementById('cardBonus').innerText = "₹0";
+        }
+
+        // Switch screen to Dashboard
+        document.getElementById('searchBox').style.display = 'none';
+        document.getElementById('resultBox').style.display = 'block';
+
+      } catch (e) {
+        console.error(e);
+        err.innerText = "Error: Sheet data load nahi ho paya. Kripya check karein ki Google Sheet public hai.";
+        err.style.display = 'block';
+      } finally {
+        btn.innerText = 'View Details';
+        btn.disabled = false;
+      }
+    }
+
+    // Attach Event Listeners
+    document.getElementById('submitBtn').addEventListener('click', runSearch);
+    document.getElementById('empIdInput').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') runSearch();
+    });
+
+    document.getElementById('backBtn').addEventListener('click', function () {
+      document.getElementById('resultBox').style.display = 'none';
+      document.getElementById('searchBox').style.display = 'block';
+    });
+
+    document.getElementById('tabBtnOt').addEventListener('click', function () {
+      switchView('tab-ot', this);
+    });
+
+    document.getElementById('tabBtnPay').addEventListener('click', function () {
+      switchView('tab-pay', this);
+    });
+  </script>
+</body>
+</html>

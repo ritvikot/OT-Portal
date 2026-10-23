@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
-    body { background: #0f172a; color: #1e293b; min-height: 100vh; padding: 40px 15px; }
+    body { background: #0f172a; color: #1e293b; min-height: 100vh; padding: 30px 15px; }
 
     #searchBox { display: block; background: #ffffff; width: 100%; max-width: 420px; margin: 40px auto; padding: 32px 28px; border-radius: 16px; box-shadow: 0 20px 30px rgba(0,0,0,0.3); text-align: center; }
     #searchBox h2 { font-size: 1.5rem; font-weight: 700; color: #0f172a; }
@@ -20,6 +20,7 @@
 
     .btn-search { width: 100%; padding: 12px; background: #2563eb; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
     .btn-search:hover { background: #1d4ed8; }
+    .btn-search:disabled { background: #94a3b8; cursor: not-allowed; }
     .msg-alert { padding: 10px; border-radius: 6px; font-size: 0.85rem; text-align: center; margin-top: 14px; display: none; background: #fee2e2; color: #b91c1c; }
 
     #resultBox { display: none; width: 100%; max-width: 1100px; margin: 0 auto; }
@@ -67,10 +68,11 @@
 
     <div class="input-field">
       <label>User ID / Casper ID / Vendor ID</label>
-      <input type="text" id="empIdInput" placeholder="e.g. 2333480 ya TH162372" />
+      <input type="text" id="empIdInput" placeholder="e.g. 2333480" onkeydown="if(event.key==='Enter') runSearch();" />
     </div>
 
-    <button type="button" class="btn-search" id="submitBtn">View Details</button>
+    <!-- Direct onclick added to eliminate event listener failures -->
+    <button type="button" class="btn-search" id="submitBtn" onclick="runSearch();">View Details</button>
     <div class="msg-alert" id="errorNotice">Record nahi mila! Sahi ID daalein.</div>
 
     <div>
@@ -87,13 +89,13 @@
         <h2 id="dispName">Welcome</h2>
         <span id="dispId" style="color: #94a3b8; font-size: 0.85rem;"></span>
       </div>
-      <button type="button" class="btn-back" id="backBtn">New Search</button>
+      <button type="button" class="btn-back" id="backBtn" onclick="goBack();">New Search</button>
     </div>
 
     <div class="res-body">
       <div class="tab-nav">
-        <button type="button" class="tab-btn active" id="tabBtnOt">OverTime (Date-Wise)</button>
-        <button type="button" class="tab-btn" id="tabBtnPay">Payroll Summary</button>
+        <button type="button" class="tab-btn active" id="tabBtnOt" onclick="switchView('tab-ot', this);">OverTime (Date-Wise)</button>
+        <button type="button" class="tab-btn" id="tabBtnPay" onclick="switchView('tab-pay', this);">Payroll Summary</button>
       </div>
 
       <!-- TAB 1: OVERTIME -->
@@ -183,6 +185,11 @@
       if (target) target.classList.add('active');
     }
 
+    function goBack() {
+      document.getElementById('resultBox').style.display = 'none';
+      document.getElementById('searchBox').style.display = 'block';
+    }
+
     async function fetchGViz(sheetId, tab) {
       const url = "https://docs.google.com/spreadsheets/d/" + sheetId + "/gviz/tq?tqx=out:json&sheet=" + encodeURIComponent(tab);
       const res = await fetch(url);
@@ -190,7 +197,7 @@
       const s = txt.indexOf('{');
       const e = txt.lastIndexOf('}');
       if (s === -1 || e === -1) {
-        throw new Error('Sheet data parse nahi ho pa raha');
+        throw new Error('Sheet data parse nahi ho pa raha: ' + tab);
       }
       const data = JSON.parse(txt.substring(s, e + 1));
       return { cols: data.table.cols, rows: data.table.rows };
@@ -236,163 +243,7 @@
           fetchGViz(SHEET_PAY_ID, 'Sheet1')
         ]);
 
+        // 1. OT Sheet match
         let otRow = null;
         if (otData && otData.rows) {
-          for (let i = 0; i < otData.rows.length; i++) {
-            const r = otData.rows[i];
-            if (!r || !r.c) continue;
-            const c0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
-            const c1 = String(r.c[1] ? (r.c[1].f || r.c[1].v || '') : '').trim();
-            if (c0.toLowerCase() === queryId.toLowerCase() || c1.toLowerCase() === queryId.toLowerCase()) {
-              otRow = r;
-              break;
-            }
-          }
-        }
-
-        let payRow = null;
-        if (payData && payData.rows) {
-          for (let i = 0; i < payData.rows.length; i++) {
-            const r = payData.rows[i];
-            if (!r || !r.c) continue;
-            const c0 = String(r.c[0] ? (r.c[0].f || r.c[0].v || '') : '').trim();
-            const c1 = String(r.c[1] ? (r.c[1].f || r.c[1].v || '') : '').trim();
-            if (c0.toLowerCase() === queryId.toLowerCase() || c1.toLowerCase() === queryId.toLowerCase()) {
-              payRow = r;
-              break;
-            }
-          }
-        }
-
-        if (!otRow && !payRow) {
-          err.innerText = "Is ID ka koi record nahi mila!";
-          err.style.display = 'block';
-          btn.innerText = 'View Details';
-          btn.disabled = false;
-          return;
-        }
-
-        const name = (otRow && otRow.c && otRow.c[3] ? (otRow.c[3].f || otRow.c[3].v) : '') || 
-                     (payRow && payRow.c && payRow.c[2] ? (payRow.c[2].f || payRow.c[2].v) : '') || 'Employee Details';
-        document.getElementById('dispName').innerText = String(name);
-        document.getElementById('dispId').innerText = "Searched ID: " + queryId;
-
-        const otDateBody = document.getElementById('otDateWiseBody');
-        let otDateHtml = '';
-        let totalOtCount = 0;
-        let otDaysCount = 0;
-
-        if (otRow && otRow.c) {
-          for (let i = 0; i < CYCLE_DATES.length; i++) {
-            const dateLabel = CYCLE_DATES[i];
-            const colIndex = 5 + i;
-            const cell = otRow.c[colIndex];
-            const cellVal = cell ? (cell.f !== undefined && cell.f !== null ? cell.f : (cell.v !== null && cell.v !== undefined ? cell.v : '')) : '';
-            const numVal = parseFloat(cellVal) || 0;
-            const isOt = numVal > 0;
-
-            if (isOt) otDaysCount++;
-
-            otDateHtml += '<tr class="' + (isOt ? 'has-ot' : '') + '">' +
-              '<td>' + (i + 1) + '</td>' +
-              '<td><strong>' + dateLabel + '</strong></td>' +
-              '<td>' + (cellVal !== '' && cellVal !== 0 ? cellVal + ' Hrs' : (numVal > 0 ? numVal + ' Hrs' : '-')) + '</td>' +
-              '<td>' + (isOt ? '<span class="badge-ot">OT Added</span>' : '<span style="color:#94a3b8;">-</span>') + '</td>' +
-            '</tr>';
-          }
-          const lastCell = otRow.c[otRow.c.length - 1];
-          totalOtCount = lastCell ? (lastCell.f || lastCell.v || 0) : 0;
-        } else {
-          otDateHtml = '<tr><td colspan="4" style="text-align:center;">Koi OverTime record nahi mila.</td></tr>';
-        }
-
-        otDateBody.innerHTML = otDateHtml;
-        document.getElementById('cardOT').innerText = totalOtCount + " Hrs";
-        document.getElementById('cardOTDays').innerText = otDaysCount + " Days";
-
-        const payHead = document.getElementById('payHead');
-        const payBody = document.getElementById('payBody');
-
-        const payCols = [
-          { idx: 0, label: "VENDOR EMPLOYEE ID" },
-          { idx: 1, label: "ASSOCIATE ID" },
-          { idx: 2, label: "FIRST NAME" },
-          { idx: 3, label: "DATE OF JOINING" },
-          { idx: 4, label: "GENDER" },
-          { idx: 5, label: "FEMALE ATTENDANCE INCENTIVE" },
-          { idx: 6, label: "NIGHT SHIFT ALLOWANCE" },
-          { idx: 7, label: "FOOD ALLOWANCE" },
-          { idx: 8, label: "B SHIFT INCENTIVE" },
-          { idx: 9, label: "ACTIVE BONUS" },
-          { idx: 10, label: "HOLIDAY WORKING" },
-          { idx: 11, label: "UNNATI SCHEME" },
-          { idx: 12, label: "LOPR DAYS" },
-          { idx: 13, label: "OT HOURS" },
-          { idx: 14, label: "HR REMARKS" }
-        ];
-
-        let payH = '<tr>';
-        payCols.forEach(c => { payH += '<th>' + c.label + '</th>'; });
-        payH += '</tr>';
-        payHead.innerHTML = payH;
-
-        if (payRow && payRow.c) {
-          let payB = '<tr>';
-          payCols.forEach(c => {
-            const cell = (payRow.c && payRow.c.length > c.idx) ? payRow.c[c.idx] : null;
-            payB += '<td>' + formatCellVal(cell) + '</td>';
-          });
-          payB += '</tr>';
-          payBody.innerHTML = payB;
-
-          const getAmt = (idx) => {
-            const cell = (payRow.c && payRow.c.length > idx) ? payRow.c[idx] : null;
-            if (!cell) return 0;
-            return cell.f !== undefined && cell.f !== null ? cell.f : (cell.v !== null && cell.v !== undefined ? cell.v : 0);
-          };
-
-          document.getElementById('cardNight').innerText = "₹" + getAmt(6);
-          document.getElementById('cardFood').innerText = "₹" + getAmt(7);
-          document.getElementById('cardBonus').innerText = "₹" + getAmt(9);
-          document.getElementById('cardFemaleInc').innerText = "₹" + getAmt(5);
-        } else {
-          payBody.innerHTML = '<tr><td colspan="' + payCols.length + '" style="text-align:center;">Koi Payroll record nahi mila.</td></tr>';
-          document.getElementById('cardNight').innerText = "₹0";
-          document.getElementById('cardFood').innerText = "₹0";
-          document.getElementById('cardBonus').innerText = "₹0";
-          document.getElementById('cardFemaleInc').innerText = "₹0";
-        }
-
-        document.getElementById('searchBox').style.display = 'none';
-        document.getElementById('resultBox').style.display = 'block';
-
-      } catch (e) {
-        console.error(e);
-        err.innerText = "Error: Sheet data load nahi ho paya. Kripya check karein ki Google Sheet public hai.";
-        err.style.display = 'block';
-      } finally {
-        btn.innerText = 'View Details';
-        btn.disabled = false;
-      }
-    }
-
-    document.getElementById('submitBtn').addEventListener('click', runSearch);
-    document.getElementById('empIdInput').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') runSearch();
-    });
-
-    document.getElementById('backBtn').addEventListener('click', function () {
-      document.getElementById('resultBox').style.display = 'none';
-      document.getElementById('searchBox').style.display = 'block';
-    });
-
-    document.getElementById('tabBtnOt').addEventListener('click', function () {
-      switchView('tab-ot', this);
-    });
-
-    document.getElementById('tabBtnPay').addEventListener('click', function () {
-      switchView('tab-pay', this);
-    });
-  </script>
-</body>
-</html>
+          for (let i = 0; i < otData.rows.
